@@ -134,9 +134,33 @@
       box-shadow: var(--shadow-sm); max-width: 800px;
     }
 
+    /* API STATUS BADGE */
+    .api-status-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11.5px; font-weight: 700; padding: 3px 10px;
+      border-radius: 12px; background: var(--card-bg);
+      border: 1px solid var(--card-border); color: var(--text-muted);
+      box-shadow: var(--shadow-sm); margin-bottom: 12px;
+      transition: all 0.2s ease;
+    }
+    .api-status-badge.online {
+      background: var(--green-bg); border-color: var(--green-border); color: var(--green-text);
+    }
+    .api-status-badge.offline {
+      background: var(--badge-bg); border-color: var(--primary-border); color: var(--badge-text);
+    }
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: currentColor;
+    }
+    .api-status-badge.online .status-dot {
+      box-shadow: 0 0 6px #10b981;
+      animation: pulseDot 2s infinite;
+    }
+    @keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.85); } }
+
     /* BOHR ATOM */
     .atom-visual {
-      width: 80px; height: 80px; margin-bottom: 12px;
+      width: 76px; height: 76px; margin-bottom: 10px;
       position: relative; transition: all 0.25s ease;
     }
     .search-hero.docked .atom-visual {
@@ -249,11 +273,13 @@
     .tab-view { display: none; }
     .tab-view.active { display: block; }
 
-    /* QUESTION CARD */
+    /* QUESTION CARD - OPTIMIZED WITH CONTENT-VISIBILITY */
     .question-card {
       background: var(--card-bg); border: 1.5px solid var(--card-border);
       border-radius: var(--radius); padding: 18px; margin-bottom: 16px;
       box-shadow: var(--shadow-sm); transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      content-visibility: auto;
+      contain-intrinsic-size: auto 240px;
     }
     .question-card:hover {
       border-color: var(--primary-border); box-shadow: var(--shadow-md);
@@ -325,10 +351,11 @@
     }
     .tf-btn-group { display: flex; gap: 6px; }
     .tf-btn {
-      padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700;
+      padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 700;
       border: 1px solid var(--card-border); background: var(--card-hover);
-      color: var(--text-sub); cursor: pointer;
+      color: var(--text-sub); cursor: pointer; transition: all 0.15s ease;
     }
+    .tf-btn:active { transform: scale(0.92); }
     .tf-btn.selected-true { background: var(--green-bg); border-color: var(--green-border); color: var(--green-text); }
     .tf-btn.selected-false { background: var(--red-bg); border-color: var(--red-border); color: var(--red-text); }
 
@@ -360,11 +387,19 @@
     }
     .explain-card.open .explain-content { display: block; }
 
+    /* VIRTUAL SENTINEL */
+    .virtual-sentinel {
+      width: 100%; height: 50px; display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted); font-size: 12.5px; font-weight: 600; padding: 12px 0;
+    }
+
     /* EXAMS LIST */
     .exam-card {
       background: var(--card-bg); border: 1.5px solid var(--card-border);
       border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
       cursor: pointer; box-shadow: var(--shadow-sm); transition: all 0.2s ease;
+      content-visibility: auto;
+      contain-intrinsic-size: auto 95px;
     }
     .exam-card:hover {
       border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-md);
@@ -477,6 +512,12 @@
         <circle class="nucleus-glow" cx="50" cy="50" r="12"></circle>
         <circle class="nucleus" cx="50" cy="50" r="8"></circle>
       </svg>
+    </div>
+
+    <!-- API / DATABASE STATUS BADGE -->
+    <div class="api-status-badge offline" id="apiStatusBadge">
+      <span class="status-dot"></span>
+      <span id="apiStatusText">Đang khởi tạo dữ liệu...</span>
     </div>
 
     <div class="hero-brand">
@@ -617,7 +658,7 @@
           </div>
 
           <div style="margin-top:16px; display:flex; gap:10px; justify-content:center;">
-            <button class="page-btn" id="btnRetakeExam" style="background:var(--primary); color:#fff; border:none; padding:9px 18px; border-radius:18px;">
+            <button class="page-btn" id="btnRetakeExam" style="background:var(--primary); color:#fff; border:none; padding:9px 18px; border-radius:18px; font-weight:700; cursor:pointer;">
               🔄 Làm đề mới
             </button>
           </div>
@@ -651,13 +692,15 @@
 
   <div class="toast" id="toast">Đã sao chép!</div>
 
-  <!-- NẠP SCRIPT DỮ LIỆU ĐÓNG GÓI -->
+  <!-- NẠP SCRIPT DỮ LIỆU ĐÓNG GÓI OFFLINE NẾU CÓ -->
   <script src="js/questions_data.js"></script>
 
   <script>
     (function() {
-      const API_URL = (location.hostname === '127.0.0.1' || location.hostname === 'localhost') ? 'http://127.0.0.1:8000/api' : '';
+      // 1. CẤU HÌNH API & NATIVE BRIDGE
+      const API_BASE = 'http://127.0.0.1:8000/api';
       let isApiOnline = false;
+      const isAndroidApp = (typeof window.AndroidBridge !== 'undefined');
 
       // ELEMENTS
       const themeBtn = document.getElementById('themeBtn');
@@ -670,13 +713,37 @@
       const questionsContainer = document.getElementById('questionsContainer');
       const resultsCount = document.getElementById('resultsCount');
       const toast = document.getElementById('toast');
+      const apiStatusBadge = document.getElementById('apiStatusBadge');
+      const apiStatusText = document.getElementById('apiStatusText');
 
       // STATE
       let activeChapter = 'all';
       let activeOnlyImages = false;
       let datasetCache = null;
 
-      // 1. THEME TOGGLE
+      // NATIVE HELPERS
+      function nativeHaptic(ms = 20) {
+        if (window.AndroidBridge && window.AndroidBridge.vibrate) {
+          window.AndroidBridge.vibrate(ms);
+        } else if (navigator.vibrate) {
+          navigator.vibrate(ms);
+        }
+      }
+
+      function nativeCopyText(txt) {
+        if (window.AndroidBridge && window.AndroidBridge.copyToClipboard) {
+          window.AndroidBridge.copyToClipboard(txt);
+          showToast('Đã sao chép câu & lời giải!');
+        } else if (navigator.clipboard) {
+          navigator.clipboard.writeText(txt).then(() => {
+            showToast('Đã sao chép câu & lời giải!');
+          }).catch(() => showToast('Đã sao chép!'));
+        } else {
+          showToast('Đã sao chép!');
+        }
+      }
+
+      // 2. THEME TOGGLE
       const savedTheme = localStorage.getItem('vatly12_theme') || 'dark';
       if (savedTheme === 'dark') {
         document.body.classList.add('dark');
@@ -690,9 +757,35 @@
         const isDark = document.body.classList.contains('dark');
         themeBtn.textContent = isDark ? '☀️' : '🌙';
         localStorage.setItem('vatly12_theme', isDark ? 'dark' : 'light');
+        nativeHaptic(15);
       });
 
-      // 2. TRUY XUẤT DỮ LIỆU LAZY LOAD (CHỈ TẢI KHI CẦN)
+      // 3. KIỂM TRA TRẠNG THÁI REST API MARIADB
+      async function detectApi() {
+        try {
+          const ctrl = new AbortController();
+          const tId = setTimeout(() => ctrl.abort(), 1200);
+          const res = await fetch(API_BASE + '/health', { signal: ctrl.signal });
+          clearTimeout(tId);
+          if (res.ok) {
+            const info = await res.json();
+            if (info.status === 'healthy') {
+              isApiOnline = true;
+              apiStatusBadge.className = 'api-status-badge online';
+              apiStatusText.textContent = `⚡ MariaDB API (3.224 câu - Online)`;
+              return;
+            }
+          }
+        } catch (e) {
+          // offline
+        }
+        isApiOnline = false;
+        apiStatusBadge.className = 'api-status-badge offline';
+        apiStatusText.textContent = `📦 Chế độ Offline (3.224 câu)`;
+      }
+      detectApi();
+
+      // 4. TRUY XUẤT DỮ LIỆU CÂU HỎI (LAZY LOAD FALLBACK)
       async function getDataset() {
         if (datasetCache && datasetCache.length) return datasetCache;
         if (window.QUESTIONS_DATABASE && window.QUESTIONS_DATABASE.length) {
@@ -717,16 +810,186 @@
         return [];
       }
 
-      // 3. TAB 1: TRA CỨU CÂU HỎI
+      // 5. CORE ENGINE: VIRTUAL VIEWPORT-ONLY RENDERING
+      // Chỉ render những gì hiển thị trên màn hình qua IntersectionObserver và content-visibility
+      function renderQuestionCardHtml(item, idx) {
+        const qid = item.id || item.ms || item.ms_id || String(idx + 1);
+        const chapTitle = item.chap_title || item.chapter_title || `Chương ${item.chapter || item.chap || 1}`;
+        const typeName = item.type_name || (item.type === 'part1_single_choice' ? 'Trắc nghiệm 4 lựa chọn' : (item.type === 'part2_true_false' ? 'Trắc nghiệm Đúng/Sai' : 'Trả lời ngắn'));
+        const qType = item.type || 'part1_single_choice';
+
+        let html = `
+          <article class="question-card">
+            <div class="card-header">
+              <div class="card-badges">
+                <span class="badge-id">[MS.${qid}]</span>
+                <span class="badge-chap">${chapTitle}</span>
+                <span class="badge-type">${typeName}</span>
+              </div>
+              <button class="btn-copy" onclick="copyQuestion('${qid}')">
+                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                Sao chép
+              </button>
+            </div>
+
+            <div class="question-stem">${formatMathHtml(item.stem)}</div>
+        `;
+
+        // Images with lazy loading & async decoding
+        if (item.images && item.images.length) {
+          item.images.forEach(img => {
+            let imgSrc = typeof img === 'string' ? img : (img.local_path ? 'images/' + img.local_path.split('/').pop() : img.remote_url);
+            if (imgSrc.startsWith('/')) imgSrc = 'images/' + imgSrc.split('/').pop();
+            html += `<img src="${imgSrc}" class="question-img" alt="Hình minh họa" loading="lazy" decoding="async" onerror="this.src='https://www.physics.edu.vn/img/phys12/'+this.src.split('/').pop()">`;
+          });
+        }
+
+        // Part 1 Options
+        if (qType === 'part1_single_choice' && item.options && item.options.length) {
+          html += `<div class="options-grid">`;
+          item.options.forEach(opt => {
+            const optClean = formatMathHtml(opt);
+            const m = opt.match(/^([A-D])\./);
+            const optLetter = m ? m[1] : '';
+            const isCorrect = (item.answer === optLetter);
+            html += `
+              <div class="option-item ${isCorrect ? 'correct' : ''}">
+                <span class="opt-label">${optLetter ? optLetter + '.' : ''}</span>
+                <span>${optLetter ? optClean.replace(/^[A-D]\.\s*/, '') : optClean}</span>
+                ${isCorrect ? '<span class="opt-check">✓</span>' : ''}
+              </div>
+            `;
+          });
+          html += `</div>`;
+        }
+
+        // Part 2 True / False
+        if (qType === 'part2_true_false' && item.options && item.options.length) {
+          html += `<div class="tf-grid">`;
+          item.options.forEach((sub, sIdx) => {
+            const subLabel = String.fromCharCode(97 + sIdx);
+            const isTrue = item.answer && item.answer.includes(`${subLabel}: Đúng`);
+            html += `
+              <div class="tf-item">
+                <span><strong>${subLabel})</strong> ${formatMathHtml(sub.replace(/^[a-d]\.\s*/i, ''))}</span>
+                <span class="tf-badge ${isTrue ? 'true' : 'false'}" style="font-size:11px; font-weight:700; padding:2px 7px; border-radius:5px; ${isTrue ? 'background:var(--green-bg); color:var(--green-text);' : 'background:var(--red-bg); color:var(--red-text);'}">${isTrue ? 'ĐÚNG' : 'SAI'}</span>
+              </div>
+            `;
+          });
+          html += `</div>`;
+        }
+
+        // Part 3 Short answer
+        if (qType === 'part3_short_answer') {
+          html += `
+            <div class="short-ans-box" style="margin-bottom:12px; padding:9px 12px; background:var(--badge-bg); border-radius:8px; border:1px solid var(--primary-border);">
+              <span class="short-ans-title" style="font-weight:700; font-size:13px; color:var(--badge-text);">Đáp số chuẩn: </span>
+              <span class="short-ans-val" style="font-weight:800; font-size:14.5px; color:var(--primary);">${formatMathHtml(item.answer)}</span>
+            </div>
+          `;
+        }
+
+        // Explanation
+        if (item.explanation) {
+          html += `
+            <div class="explain-card" onclick="this.classList.toggle('open')">
+              <div class="explain-title">
+                <span>💡 Lời giải sư phạm chi tiết</span>
+                <span style="font-size:11px;">Chạm xem ▼</span>
+              </div>
+              <div class="explain-content">${formatMathHtml(item.explanation)}</div>
+            </div>
+          `;
+        }
+
+        html += `</article>`;
+        return html;
+      }
+
+      function renderVirtualQuestionCards(items, container) {
+        if (container._vObserver) {
+          container._vObserver.disconnect();
+          container._vObserver = null;
+        }
+
+        if (!items || !items.length) {
+          container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);">🔍 Không tìm thấy câu hỏi với mã hoặc từ khóa trên!</div>';
+          return;
+        }
+
+        container.innerHTML = '';
+        const listWrapper = document.createElement('div');
+        listWrapper.className = 'virtual-rendered-cards';
+        container.appendChild(listWrapper);
+
+        const sentinel = document.createElement('div');
+        sentinel.className = 'virtual-sentinel';
+        container.appendChild(sentinel);
+
+        let currentIndex = 0;
+        const CHUNK_SIZE = 20;
+
+        function appendChunk() {
+          const nextBatch = items.slice(currentIndex, currentIndex + CHUNK_SIZE);
+          if (!nextBatch.length) {
+            sentinel.remove();
+            if (container._vObserver) {
+              container._vObserver.disconnect();
+              container._vObserver = null;
+            }
+            return;
+          }
+
+          const fragment = document.createRange().createContextualFragment(
+            nextBatch.map((it, idx) => renderQuestionCardHtml(it, currentIndex + idx)).join('')
+          );
+          listWrapper.appendChild(fragment);
+          currentIndex += nextBatch.length;
+
+          if (currentIndex >= items.length) {
+            sentinel.remove();
+            if (container._vObserver) {
+              container._vObserver.disconnect();
+              container._vObserver = null;
+            }
+          } else {
+            sentinel.innerHTML = `<span>⏳ Đang tải thêm câu hỏi... (${currentIndex}/${items.length})</span>`;
+          }
+        }
+
+        // Render mẻ đầu tiên ngay lập tức
+        appendChunk();
+
+        // Kích hoạt IntersectionObserver nếu còn phần tử
+        if (currentIndex < items.length) {
+          const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                appendChunk();
+              }
+            });
+          }, {
+            root: null,
+            rootMargin: '350px 0px',
+            threshold: 0.05
+          });
+          observer.observe(sentinel);
+          container._vObserver = observer;
+        }
+      }
+
+      // 6. TAB 1: TRA CỨU CÂU HỎI
       window.quickFillSearch = function(txt) {
         searchInput.value = txt;
         handleSearchInput();
+        nativeHaptic(15);
       };
 
       searchInput.addEventListener('input', handleSearchInput);
       clearBtn.addEventListener('click', () => {
         searchInput.value = '';
         handleSearchInput();
+        nativeHaptic(15);
       });
 
       async function handleSearchInput() {
@@ -734,18 +997,53 @@
         clearBtn.style.display = val ? 'flex' : 'none';
 
         if (!val) {
-          // Trở lại trạng thái IDLE ở giữa màn hình
           searchHero.classList.remove('docked');
           searchResultsArea.style.display = 'none';
           questionsContainer.innerHTML = '';
           return;
         }
 
-        // Người dùng đã nhập -> Dock Hero lên trên và nạp dữ liệu
         searchHero.classList.add('docked');
         searchResultsArea.style.display = 'block';
         questionsContainer.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted);">⏳ Đang tra cứu câu hỏi...</div>';
 
+        // 1. Thử gọi API MariaDB nếu Online
+        if (isApiOnline) {
+          try {
+            if (/^\d{6}$/.test(val)) {
+              // Tìm chính xác theo ID 6 số
+              const res = await fetch(`${API_BASE}/questions/${val}`);
+              if (res.ok) {
+                const q = await res.json();
+                resultsCount.textContent = `Tìm thấy 1 câu hỏi từ MariaDB API`;
+                renderVirtualQuestionCards([q], questionsContainer);
+                return;
+              }
+            } else {
+              // Tìm từ khóa qua API
+              const res = await fetch(`${API_BASE}/questions?q=${encodeURIComponent(val)}&page_size=50`);
+              if (res.ok) {
+                const json = await res.json();
+                if (json.data && json.data.length > 0) {
+                  let results = json.data;
+                  if (activeChapter !== 'all') {
+                    results = results.filter(q => String(q.chapter || q.chap) === String(activeChapter));
+                  }
+                  if (activeOnlyImages) {
+                    results = results.filter(q => q.images && q.images.length > 0);
+                  }
+                  resultsCount.textContent = `Tìm thấy ${results.length} câu hỏi phù hợp (MariaDB)`;
+                  renderVirtualQuestionCards(results, questionsContainer);
+                  return;
+                }
+              }
+            }
+          } catch (e) {
+            // Lỗi API -> Tự động chuyển fallback sang dữ liệu offline
+          }
+        }
+
+        // 2. Chế độ Offline Fallback
         const data = await getDataset();
         if (!data || !data.length) {
           questionsContainer.innerHTML = '<div style="text-align:center; padding:30px; color:var(--red-text);">⚠️ Không thể nạp dữ liệu câu hỏi.</div>';
@@ -755,15 +1053,12 @@
         let results = [];
         const qLower = val.toLowerCase();
 
-        // 1. Nếu là đúng 6 chữ số: tìm chính xác theo ID
         if (/^\d{6}$/.test(val)) {
           results = data.filter(q => String(q.id) === val || String(q.ms) === val || String(q.canonical_id) === val);
         } else if (/^\d{1,5}$/.test(val)) {
-          // Nếu nhập số ngắn: tìm ID có chứa số đó
           const pad = val.padStart(6, '0');
           results = data.filter(q => String(q.id) === pad || String(q.id).includes(val) || String(q.canonical_id).includes(val));
         } else {
-          // Tìm theo từ khóa
           results = data.filter(q => {
             const stemMatch = q.stem && q.stem.toLowerCase().includes(qLower);
             const expMatch = q.explanation && q.explanation.toLowerCase().includes(qLower);
@@ -771,7 +1066,6 @@
           });
         }
 
-        // Áp dụng bộ lọc chương nếu có
         if (activeChapter !== 'all') {
           results = results.filter(q => String(q.chap || q.chapter) === String(activeChapter));
         }
@@ -780,12 +1074,13 @@
         }
 
         resultsCount.textContent = `Tìm thấy ${results.length} câu hỏi phù hợp`;
-        renderQuestionCards(results.slice(0, 30), questionsContainer);
+        renderVirtualQuestionCards(results, questionsContainer);
       }
 
       // Filter pills
       document.querySelectorAll('.filter-pills .pill').forEach(pill => {
         pill.addEventListener('click', () => {
+          nativeHaptic(15);
           if (pill.dataset.chap) {
             document.querySelectorAll('.filter-pills .pill[data-chap]').forEach(p => p.classList.remove('active'));
             pill.classList.add('active');
@@ -800,111 +1095,7 @@
         });
       });
 
-      // 4. RENDER THẺ CÂU HỎI
-      function renderQuestionCards(items, container, options = {}) {
-        if (!items || !items.length) {
-          container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);">🔍 Không tìm thấy câu hỏi với mã hoặc từ khóa trên!</div>';
-          return;
-        }
-
-        let html = '';
-        items.forEach((item, idx) => {
-          const qid = item.id || item.ms || String(idx + 1);
-          const chapTitle = item.chap_title || item.chapter_title || `Chương ${item.chap || 1}`;
-          const typeName = item.type_name || (item.type === 'part1_single_choice' ? 'Trắc nghiệm 4 lựa chọn' : (item.type === 'part2_true_false' ? 'Trắc nghiệm Đúng/Sai' : 'Trả lời ngắn'));
-          const qType = item.type || 'part1_single_choice';
-
-          html += `
-            <article class="question-card">
-              <div class="card-header">
-                <div class="card-badges">
-                  <span class="badge-id">[MS.${qid}]</span>
-                  <span class="badge-chap">${chapTitle}</span>
-                  <span class="badge-type">${typeName}</span>
-                </div>
-                <button class="btn-copy" onclick="copyQuestion('${qid}')">
-                  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                  Sao chép
-                </button>
-              </div>
-
-              <div class="question-stem">${formatMathHtml(item.stem)}</div>
-          `;
-
-          // Images
-          if (item.images && item.images.length) {
-            item.images.forEach(img => {
-              let imgSrc = typeof img === 'string' ? img : (img.local_path ? 'images/' + img.local_path.split('/').pop() : img.remote_url);
-              if (imgSrc.startsWith('/')) imgSrc = 'images/' + imgSrc.split('/').pop();
-              html += `<img src="${imgSrc}" class="question-img" alt="Hình minh họa" loading="lazy" onerror="this.src='https://www.physics.edu.vn/img/phys12/'+this.src.split('/').pop()">`;
-            });
-          }
-
-          // Options - Part 1
-          if (qType === 'part1_single_choice' && item.options && item.options.length) {
-            html += `<div class="options-grid">`;
-            item.options.forEach(opt => {
-              const optClean = formatMathHtml(opt);
-              const m = opt.match(/^([A-D])\./);
-              const optLetter = m ? m[1] : '';
-              const isCorrect = (item.answer === optLetter);
-              html += `
-                <div class="option-item ${isCorrect ? 'correct' : ''}">
-                  <span class="opt-label">${optLetter ? optLetter + '.' : ''}</span>
-                  <span>${optLetter ? optClean.replace(/^[A-D]\.\s*/, '') : optClean}</span>
-                  ${isCorrect ? '<span class="opt-check">✓</span>' : ''}
-                </div>
-              `;
-            });
-            html += `</div>`;
-          }
-
-          // Options - Part 2
-          if (qType === 'part2_true_false' && item.options && item.options.length) {
-            html += `<div class="tf-grid">`;
-            item.options.forEach((sub, sIdx) => {
-              const subLabel = String.fromCharCode(97 + sIdx);
-              const isTrue = item.answer && item.answer.includes(`${subLabel}: Đúng`);
-              html += `
-                <div class="tf-item">
-                  <span><strong>${subLabel})</strong> ${formatMathHtml(sub.replace(/^[a-d]\.\s*/i, ''))}</span>
-                  <span class="tf-badge ${isTrue ? 'true' : 'false'}" style="font-size:11px; font-weight:700; padding:2px 7px; border-radius:5px; ${isTrue ? 'background:var(--green-bg); color:var(--green-text);' : 'background:var(--red-bg); color:var(--red-text);'}">${isTrue ? 'ĐÚNG' : 'SAI'}</span>
-                </div>
-              `;
-            });
-            html += `</div>`;
-          }
-
-          // Part 3
-          if (qType === 'part3_short_answer') {
-            html += `
-              <div class="short-ans-box">
-                <span class="short-ans-title">Đáp số chuẩn:</span>
-                <span class="short-ans-val">${formatMathHtml(item.answer)}</span>
-              </div>
-            `;
-          }
-
-          // Explanation
-          if (item.explanation) {
-            html += `
-              <div class="explain-card" onclick="this.classList.toggle('open')">
-                <div class="explain-title">
-                  <span>💡 Lời giải sư phạm chi tiết</span>
-                  <span style="font-size:11px;">Chạm xem ▼</span>
-                </div>
-                <div class="explain-content">${formatMathHtml(item.explanation)}</div>
-              </div>
-            `;
-          }
-
-          html += `</article>`;
-        });
-
-        container.innerHTML = html;
-      }
-
-      // 5. TAB 2: DANH MỤC 8 ĐỀ THI (CHỈ TẢI CÂU HỎI KHI BẤM XEM)
+      // 7. TAB 2: DANH MỤC 8 ĐỀ THI
       const examsListScreen = document.getElementById('examsListScreen');
       const examDetailScreen = document.getElementById('examDetailScreen');
       const examsCardsList = document.getElementById('examsCardsList');
@@ -930,7 +1121,7 @@
             <div class="exam-card" onclick="openExam('${ex.slug}')">
               <div class="exam-title">${ex.title}</div>
               <div class="exam-subtitle">${ex.subtitle}</div>
-              <div class="exam-meta">📌 Gồm ${ex.total} câu hỏi • Chạm để tải đề từ Database →</div>
+              <div class="exam-meta">📌 Gồm ${ex.total} câu hỏi • Chạm để nạp đề →</div>
             </div>
           `;
         });
@@ -939,15 +1130,37 @@
       renderExamsList();
 
       window.openExam = async function(slug) {
+        nativeHaptic(20);
         examsListScreen.style.display = 'none';
         examDetailScreen.style.display = 'block';
         const exMeta = EXAMS_DATA.find(e => e.slug === slug);
         currentExamTitle.textContent = exMeta ? exMeta.title : slug;
-        examQuestionsContent.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);">⏳ Đang kết nối database để tải đề thi...</div>';
+        examQuestionsContent.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);">⏳ Đang kết nối nạp đề thi...</div>';
 
+        // 1. Thử nạp từ API MariaDB
+        if (isApiOnline) {
+          try {
+            const res = await fetch(`${API_BASE}/exams/${slug}`);
+            if (res.ok) {
+              const examJson = await res.json();
+              const fullQuestions = [
+                ...(examJson.part1_single_choice || []),
+                ...(examJson.part2_true_false || []),
+                ...(examJson.part3_short_answer || [])
+              ];
+              if (fullQuestions.length) {
+                renderVirtualQuestionCards(fullQuestions, examQuestionsContent);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+              }
+            }
+          } catch(e) {}
+        }
+
+        // 2. Fallback sang dataset offline
         const data = await getDataset();
         if (!data || !data.length) {
-          examQuestionsContent.innerHTML = '<div style="text-align:center; padding:30px; color:var(--red-text);">⚠️ Không tải được dữ liệu đề thi từ database.</div>';
+          examQuestionsContent.innerHTML = '<div style="text-align:center; padding:30px; color:var(--red-text);">⚠️ Không tải được dữ liệu đề thi.</div>';
           return;
         }
 
@@ -957,17 +1170,18 @@
           return;
         }
 
-        renderQuestionCards(examQuestions, examQuestionsContent);
+        renderVirtualQuestionCards(examQuestions, examQuestionsContent);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       };
 
       btnBackToExams.addEventListener('click', () => {
+        nativeHaptic(15);
         examDetailScreen.style.display = 'none';
         examsListScreen.style.display = 'block';
         examQuestionsContent.innerHTML = '';
       });
 
-      // 6. TAB 3: THI ONLINE CÓ GIỚI HẠN THỜI GIAN (50 PHÚT)
+      // 8. TAB 3: THI ONLINE CÓ GIỚI HẠN THỜI GIAN (50 PHÚT)
       const examLobby = document.getElementById('examLobby');
       const examActiveScreen = document.getElementById('examActiveScreen');
       const examResultScreen = document.getElementById('examResultScreen');
@@ -984,8 +1198,9 @@
       let studentAnswers = {}; // { qid: answer }
 
       btnStartExam.addEventListener('click', async () => {
+        nativeHaptic(30);
         btnStartExam.disabled = true;
-        btnStartExam.textContent = '⏳ Đang tải dữ liệu và khởi tạo đề thi...';
+        btnStartExam.textContent = '⏳ Đang khởi tạo đề thi 28 câu...';
 
         const data = await getDataset();
         if (!data || !data.length) {
@@ -1001,7 +1216,7 @@
           pool = pool.filter(q => String(q.chap || q.chapter) === scope);
         }
 
-        // Cấu trúc chuẩn 28 câu: 18 TN + 4 Đ/S + 6 TLN
+        // Cấu trúc 28 câu chuẩn: 18 TN (Phần I) + 4 Đ/S (Phần II) + 6 TLN (Phần III)
         const p1 = pool.filter(q => q.type === 'part1_single_choice').sort(() => 0.5 - Math.random()).slice(0, 18);
         const p2 = pool.filter(q => q.type === 'part2_true_false').sort(() => 0.5 - Math.random()).slice(0, 4);
         const p3 = pool.filter(q => q.type === 'part3_short_answer').sort(() => 0.5 - Math.random()).slice(0, 6);
@@ -1009,13 +1224,18 @@
         currentExam28 = [...p1, ...p2, ...p3];
         studentAnswers = {};
 
-        // Render đề thi làm bài
+        // Render bài thi
         renderActiveOnlineExam(currentExam28);
 
         // Chuyển màn hình
         examLobby.style.display = 'none';
         examActiveScreen.style.display = 'block';
         examResultScreen.style.display = 'none';
+
+        // Đồng bộ thời gian đếm ngược ngầm Android Foreground Service / HyperOS Island
+        if (window.AndroidBridge && window.AndroidBridge.startTimer) {
+          window.AndroidBridge.startTimer(50 * 60, "Thi Vật Lí 12 (50 phút)");
+        }
 
         // Bắt đầu đếm ngược 50 phút
         examTimeRemaining = 50 * 60;
@@ -1026,6 +1246,7 @@
           updateTimerDisplay();
           if (examTimeRemaining <= 0) {
             clearInterval(examTimerInterval);
+            if (window.AndroidBridge && window.AndroidBridge.stopTimer) window.AndroidBridge.stopTimer();
             alert('⏰ ĐÃ HẾT GIỜ LÀM BÀI (50 PHÚT)! Hệ thống tự động thu bài và chấm điểm.');
             finishOnlineExam();
           }
@@ -1068,7 +1289,7 @@
             q.images.forEach(img => {
               let imgSrc = typeof img === 'string' ? img : (img.local_path ? 'images/' + img.local_path.split('/').pop() : img.remote_url);
               if (imgSrc.startsWith('/')) imgSrc = 'images/' + imgSrc.split('/').pop();
-              html += `<img src="${imgSrc}" class="question-img" alt="Hình vẽ" onerror="this.src='https://www.physics.edu.vn/img/phys12/'+this.src.split('/').pop()">`;
+              html += `<img src="${imgSrc}" class="question-img" alt="Hình vẽ" loading="lazy" decoding="async" onerror="this.src='https://www.physics.edu.vn/img/phys12/'+this.src.split('/').pop()">`;
             });
           }
 
@@ -1128,6 +1349,7 @@
         const parent = el.closest('.options-grid');
         parent.querySelectorAll('.option-item').forEach(i => i.classList.remove('selected'));
         el.classList.add('selected');
+        nativeHaptic(15);
         updateExamProgress();
       };
 
@@ -1144,6 +1366,7 @@
           btnT.className = 'tf-btn';
           btnF.className = 'tf-btn selected-false';
         }
+        nativeHaptic(15);
         updateExamProgress();
       };
 
@@ -1164,13 +1387,15 @@
       }
 
       btnFinishExam.addEventListener('click', () => {
+        nativeHaptic(25);
         if (confirm('Bạn có chắc chắn muốn nộp bài thi ngay bây giờ?')) {
           clearInterval(examTimerInterval);
+          if (window.AndroidBridge && window.AndroidBridge.stopTimer) window.AndroidBridge.stopTimer();
           finishOnlineExam();
         }
       });
 
-      // 7. CHẤM BÀI & XUẤT KẾT QUẢ THEO QUY CHẾ BỘ GD&ĐT
+      // 9. CHẤM BÀI & XUẤT KẾT QUẢ THEO QUY CHẾ BỘ GD&ĐT
       function finishOnlineExam() {
         examActiveScreen.style.display = 'none';
         examResultScreen.style.display = 'block';
@@ -1182,7 +1407,7 @@
         let correctP3 = 0;
         let scoreP3Val = 0;
 
-        let reviewHtml = '';
+        let reviewQuestions = [];
 
         currentExam28.forEach((q, idx) => {
           const qid = q.id;
@@ -1225,26 +1450,14 @@
             }
           }
 
-          // Review Card
-          reviewHtml += `
-            <div class="question-card" style="border-left: 4px solid ${isFullCorrect ? '#10b981' : '#ef4444'};">
-              <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-                <span style="font-weight:700;">Câu ${idx + 1} [MS.${qid}]</span>
-                <span style="font-weight:700; color:${isFullCorrect ? 'var(--green-text)' : 'var(--red-text)'};">${isFullCorrect ? '✓ CHÍNH XÁC' : '✗ CHƯA ĐÚNG'}</span>
-              </div>
-              <div class="question-stem">${formatMathHtml(q.stem)}</div>
-              <div style="font-size:13.5px; margin:8px 0; padding:8px 12px; background:var(--card-hover); border-radius:6px;">
-                <div>👤 <strong>Bạn chọn:</strong> ${formatStudentAnsDisplay(userAns, q.type)}</div>
-                <div style="color:var(--primary); margin-top:3px;">🎯 <strong>Đáp án chuẩn:</strong> ${formatMathHtml(officialAns)}</div>
-              </div>
-              ${q.explanation ? `
-                <div class="explain-card open">
-                  <div class="explain-title">💡 Lời giải sư phạm chi tiết:</div>
-                  <div class="explain-content" style="display:block;">${formatMathHtml(q.explanation)}</div>
-                </div>
-              ` : ''}
-            </div>
-          `;
+          reviewQuestions.push({
+            q,
+            idx,
+            qid,
+            userAns,
+            officialAns,
+            isFullCorrect
+          });
         });
 
         const totalScore = Math.min(10.0, scoreP1Val + scoreP2Val + scoreP3Val);
@@ -1261,6 +1474,29 @@
         else rank = '💪 Cần ôn tập thêm';
         document.getElementById('scoreRankDisplay').textContent = rank;
 
+        // Render Review Cards với Virtual Viewport Optimization
+        let reviewHtml = '';
+        reviewQuestions.forEach(item => {
+          reviewHtml += `
+            <div class="question-card" style="border-left: 4px solid ${item.isFullCorrect ? '#10b981' : '#ef4444'};">
+              <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <span style="font-weight:700;">Câu ${item.idx + 1} [MS.${item.qid}]</span>
+                <span style="font-weight:700; color:${item.isFullCorrect ? 'var(--green-text)' : 'var(--red-text)'};">${item.isFullCorrect ? '✓ CHÍNH XÁC' : '✗ CHƯA ĐÚNG'}</span>
+              </div>
+              <div class="question-stem">${formatMathHtml(item.q.stem)}</div>
+              <div style="font-size:13.5px; margin:8px 0; padding:8px 12px; background:var(--card-hover); border-radius:6px;">
+                <div>👤 <strong>Bạn chọn:</strong> ${formatStudentAnsDisplay(item.userAns, item.q.type)}</div>
+                <div style="color:var(--primary); margin-top:3px;">🎯 <strong>Đáp án chuẩn:</strong> ${formatMathHtml(item.officialAns)}</div>
+              </div>
+              ${item.q.explanation ? `
+                <div class="explain-card open">
+                  <div class="explain-title">💡 Lời giải sư phạm chi tiết:</div>
+                  <div class="explain-content" style="display:block;">${formatMathHtml(item.q.explanation)}</div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        });
         document.getElementById('examReviewContainer').innerHTML = reviewHtml;
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -1279,14 +1515,16 @@
       }
 
       btnRetakeExam.addEventListener('click', () => {
+        nativeHaptic(15);
         examResultScreen.style.display = 'none';
         examLobby.style.display = 'block';
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
 
-      // 8. BOTTOM NAVIGATION TABS (3 TABS)
+      // 10. BOTTOM NAVIGATION TABS (3 TABS)
       document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
         item.addEventListener('click', () => {
+          nativeHaptic(15);
           document.querySelectorAll('.bottom-nav .nav-item').forEach(i => i.classList.remove('active'));
           item.classList.add('active');
           const targetTab = item.dataset.tab;
@@ -1302,11 +1540,12 @@
         });
       });
 
-      // 9. HELPER FUNCTIONS
+      // 11. HELPER FUNCTIONS
       window.copyQuestion = async function(id) {
+        nativeHaptic(20);
         const data = await getDataset();
         if (!data || !data.length) return;
-        const item = data.find(q => String(q.id) === String(id) || String(q.ms) === String(id));
+        const item = data.find(q => String(q.id) === String(id) || String(q.ms) === String(id) || String(q.canonical_id) === String(id));
         if (!item) return;
 
         let txt = `[MS.${item.id}] ${stripTags(item.stem)}\n\n`;
@@ -1316,9 +1555,7 @@
         if (item.answer) txt += `Đáp án: ${stripTags(item.answer)}\n\n`;
         if (item.explanation) txt += `Lời giải:\n${stripTags(item.explanation)}\n`;
 
-        navigator.clipboard.writeText(txt).then(() => {
-          showToast('Đã sao chép câu hỏi & lời giải!');
-        }).catch(() => showToast('Đã sao chép!'));
+        nativeCopyText(txt);
       };
 
       function showToast(msg) {
@@ -1341,9 +1578,36 @@
         s = s.replace(/&lt;sup&gt;(.*?)&lt;\/sup&gt;/gi, '<sup>$1</sup>');
         s = s.replace(/&lt;br\s*\/?&gt;/gi, '<br>');
         s = s.replace(/&lt;b&gt;(.*?)&lt;\/b&gt;/gi, '<b>$1</b>');
+        s = s.replace(/&lt;strong&gt;(.*?)&lt;\/strong&gt;/gi, '<strong>$1</strong>');
         s = s.replace(/&lt;i&gt;(.*?)&lt;\/i&gt;/gi, '<i>$1</i>');
+        s = s.replace(/&lt;em&gt;(.*?)&lt;\/em&gt;/gi, '<em>$1</em>');
         return s;
       }
+
+      // 12. ANDROID HARDWARE BACK BUTTON
+      window.__onHardwareBack = function() {
+        if (examActiveScreen.style.display === 'block') {
+          if (confirm('Bạn có muốn dừng bài thi và quay lại không?')) {
+            clearInterval(examTimerInterval);
+            if (window.AndroidBridge && window.AndroidBridge.stopTimer) window.AndroidBridge.stopTimer();
+            examActiveScreen.style.display = 'none';
+            examLobby.style.display = 'block';
+          }
+          return true;
+        }
+        if (examDetailScreen.style.display === 'block') {
+          examDetailScreen.style.display = 'none';
+          examsListScreen.style.display = 'block';
+          examQuestionsContent.innerHTML = '';
+          return true;
+        }
+        if (searchInput.value.trim()) {
+          searchInput.value = '';
+          handleSearchInput();
+          return true;
+        }
+        return false;
+      };
 
     })();
   </script>
