@@ -1,6 +1,4 @@
-// Ngân hàng Câu hỏi Vật Lí 12 - Master Database Thống Nhất
-var QUESTIONS_DATABASE = (typeof window !== 'undefined' ? (window.QUESTIONS_DATABASE = window.QUESTIONS_DATA = []) : []);
-QUESTIONS_DATABASE = window.QUESTIONS_DATABASE = window.QUESTIONS_DATA = [
+[
   {
     "id": "000001",
     "ms": "000001",
@@ -83962,7 +83960,4 @@ QUESTIONS_DATABASE = window.QUESTIONS_DATABASE = window.QUESTIONS_DATA = [
     "note": "",
     "orig_source": "unified_20261007"
   }
-];
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = QUESTIONS_DATABASE;
-}
+]

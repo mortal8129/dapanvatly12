@@ -880,6 +880,32 @@
         statusText.textContent = msg;
       }
 
+      // TRUY XUẤT DỮ LIỆU CÂU HỎI ĐA TẦNG (TRIPLE-LAYER DATASET RETRIEVAL)
+      async function getDataset() {
+        if (window.QUESTIONS_DATABASE && Array.isArray(window.QUESTIONS_DATABASE) && window.QUESTIONS_DATABASE.length) {
+          return window.QUESTIONS_DATABASE;
+        }
+        if (window.QUESTIONS_DATA && Array.isArray(window.QUESTIONS_DATA) && window.QUESTIONS_DATA.length) {
+          return window.QUESTIONS_DATA;
+        }
+        if (typeof QUESTIONS_DATABASE !== 'undefined' && Array.isArray(QUESTIONS_DATABASE) && QUESTIONS_DATABASE.length) {
+          window.QUESTIONS_DATABASE = window.QUESTIONS_DATA = QUESTIONS_DATABASE;
+          return QUESTIONS_DATABASE;
+        }
+        // Fallback tự động fetch tệp JSON nếu script nạp chậm
+        try {
+          const res = await fetch('data/master_merged_questions.json');
+          if (res.ok) {
+            const data = await res.json();
+            window.QUESTIONS_DATABASE = window.QUESTIONS_DATA = data;
+            return data;
+          }
+        } catch(e) {
+          console.warn('Fallback JSON fetch failed:', e);
+        }
+        return [];
+      }
+
       // 3. TÌM KIẾM & RENDER CÂU HỎI
       async function fetchQuestions(page = 1) {
         currentPage = page;
@@ -894,17 +920,20 @@
             if (searchQuery) url += `&q=${encodeURIComponent(searchQuery)}`;
 
             const res = await fetch(url);
-            const data = await res.json();
-            renderQuestionsList(data.data, data.total, data.page, data.total_pages);
-            return;
+            if (res.ok) {
+              const data = await res.json();
+              renderQuestionsList(data.data, data.total, data.page, data.total_pages);
+              return;
+            }
           } catch (e) {
             console.warn('API error, falling back to local bundle:', e);
           }
         }
 
         // Fallback: Local Client-side Data Engine
-        if (window.QUESTIONS_DATABASE && window.QUESTIONS_DATABASE.length) {
-          let pool = window.QUESTIONS_DATABASE;
+        const localData = await getDataset();
+        if (localData && localData.length) {
+          let pool = localData;
           
           if (activeChapter !== 'all') {
             pool = pool.filter(q => String(q.chap || q.chapter) === String(activeChapter));
@@ -928,7 +957,16 @@
           const sliced = pool.slice(start, start + pageSize);
           renderQuestionsList(sliced, total, page, totalPages);
         } else {
-          questionsContainer.innerHTML = '<div style="text-align:center; padding:30px; color:var(--red-text);">⚠️ Không tải được dữ liệu!</div>';
+          questionsContainer.innerHTML = `
+            <div style="text-align:center; padding:40px 20px; color:var(--text-muted);">
+              <div style="font-size:32px; margin-bottom:10px;">⏳</div>
+              <div style="font-weight:700; margin-bottom:6px; color:var(--text);">Đang nạp dữ liệu câu hỏi...</div>
+              <div style="font-size:13px; margin-bottom:14px;">Tệp dữ liệu đang được tải xuống từ CDN, vui lòng bấm nút bên dưới nếu chờ lâu.</div>
+              <button class="page-btn" onclick="fetchQuestions(1)" style="background:var(--primary); color:#fff; border:none; padding:8px 18px; border-radius:18px;">
+                🔄 Tải lại dữ liệu
+              </button>
+            </div>
+          `;
         }
       }
 
@@ -1147,24 +1185,29 @@
         examsContainer.innerHTML = html;
       }
 
-      window.filterByExam = function(slug) {
+      window.filterByExam = async function(slug) {
         document.querySelector('.bottom-nav .nav-item[data-tab="tabSearch"]').click();
         searchHero.classList.add('docked');
-        if (window.QUESTIONS_DATABASE) {
-          const pool = window.QUESTIONS_DATABASE.filter(q => q.exam_slugs && q.exam_slugs.includes(slug));
+        const localData = await getDataset();
+        if (localData && localData.length) {
+          const pool = localData.filter(q => q.exam_slugs && q.exam_slugs.includes(slug));
           renderQuestionsList(pool.slice(0, pageSize), pool.length, 1, Math.ceil(pool.length / pageSize));
         }
       };
 
       // MOCK TEST GENERATOR
-      document.getElementById('btnGenExam').addEventListener('click', () => {
+      document.getElementById('btnGenExam').addEventListener('click', async () => {
         const mockContainer = document.getElementById('mockExamQuestions');
         mockContainer.innerHTML = '<div style="text-align:center; padding:30px;">⚡ Đang sinh ngẫu nhiên 28 câu chuẩn Bộ GD&ĐT...</div>';
 
-        if (!window.QUESTIONS_DATABASE) return;
-        const p1 = window.QUESTIONS_DATABASE.filter(q => q.type === 'part1_single_choice').sort(() => 0.5 - Math.random()).slice(0, 18);
-        const p2 = window.QUESTIONS_DATABASE.filter(q => q.type === 'part2_true_false').sort(() => 0.5 - Math.random()).slice(0, 4);
-        const p3 = window.QUESTIONS_DATABASE.filter(q => q.type === 'part3_short_answer').sort(() => 0.5 - Math.random()).slice(0, 6);
+        const localData = await getDataset();
+        if (!localData || !localData.length) {
+          mockContainer.innerHTML = '<div style="text-align:center; padding:20px; color:var(--red-text);">⚠️ Không tải được ngân hàng câu hỏi để sinh đề.</div>';
+          return;
+        }
+        const p1 = localData.filter(q => q.type === 'part1_single_choice').sort(() => 0.5 - Math.random()).slice(0, 18);
+        const p2 = localData.filter(q => q.type === 'part2_true_false').sort(() => 0.5 - Math.random()).slice(0, 4);
+        const p3 = localData.filter(q => q.type === 'part3_short_answer').sort(() => 0.5 - Math.random()).slice(0, 6);
         const exam28 = [...p1, ...p2, ...p3];
 
         let html = '<div style="font-size:14px; font-weight:700; margin:16px 0; color:var(--primary);">📋 ĐỀ THI 28 CÂU (18 TN + 4 Đ/S + 6 TLN):</div>';
@@ -1210,9 +1253,10 @@
       };
 
       // HELPER: COPY QUESTION
-      window.copyQuestion = function(id) {
-        if (!window.QUESTIONS_DATABASE) return;
-        const item = window.QUESTIONS_DATABASE.find(q => String(q.id) === String(id) || String(q.ms) === String(id));
+      window.copyQuestion = async function(id) {
+        const localData = await getDataset();
+        if (!localData || !localData.length) return;
+        const item = localData.find(q => String(q.id) === String(id) || String(q.ms) === String(id));
         if (!item) return;
 
         let txt = `[MS.${item.id}] ${stripTags(item.stem)}\n\n`;
