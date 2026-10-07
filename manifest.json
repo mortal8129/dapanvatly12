@@ -1,0 +1,22 @@
+{
+  "name": "Tra Cứu Vật Lí 12 - GDPT 2018",
+  "short_name": "Vật Lí 12",
+  "description": "Ngân hàng 3.224 câu hỏi Vật Lí 12 GDPT 2018 với đáp án và lời giải chi tiết sư phạm",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b132b",
+  "theme_color": "#0284c7",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

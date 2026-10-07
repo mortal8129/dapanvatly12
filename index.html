@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0284c7">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Tra Cứu Vật Lí 12 - GDPT 2018</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icon.png">
+
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --card-border: #e2e8f0;
+      --card-hover: #f1f5f9;
+      --text: #0f172a;
+      --text-sub: #334155;
+      --text-muted: #64748b;
+      --primary: #0284c7;
+      --primary-border: #38bdf8;
+      --accent: #0ea5e9;
+      --accent-glow: rgba(14, 165, 233, 0.25);
+      --badge-bg: #e0f2fe;
+      --badge-text: #0369a1;
+      --green-bg: #ecfdf5;
+      --green-text: #047857;
+      --green-border: #a7f3d0;
+      --red-bg: #fef2f2;
+      --red-text: #b91c1c;
+      --red-border: #fecaca;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 14px rgba(0,0,0,0.08);
+      --shadow-lg: 0 10px 25px rgba(2, 132, 199, 0.12);
+      --radius: 14px;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body.dark {
+      --bg: #0b132b;
+      --card-bg: #1c2541;
+      --card-border: #2e3b5e;
+      --card-hover: #222e50;
+      --text: #f8fafc;
+      --text-sub: #cbd5e1;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-border: #0284c7;
+      --accent: #00e5ff;
+      --accent-glow: rgba(0, 229, 255, 0.22);
+      --badge-bg: rgba(56, 189, 248, 0.14);
+      --badge-text: #38bdf8;
+      --green-bg: rgba(16, 185, 129, 0.14);
+      --green-text: #34d399;
+      --green-border: #059669;
+      --red-bg: rgba(239, 68, 68, 0.14);
+      --red-text: #f87171;
+      --red-border: #dc2626;
+      --shadow-sm: 0 2px 5px rgba(0,0,0,0.25);
+      --shadow-md: 0 6px 18px rgba(0,0,0,0.35);
+      --shadow-lg: 0 12px 28px rgba(0, 229, 255, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-family);
+      line-height: 1.55;
+      font-size: 15px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      padding-bottom: 70px; /* Space for bottom nav */
+    }
+
+    /* SUBTLE BACKGROUND WATERMARK FORMULAS */
+    .physics-watermarks {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .wm {
+      position: absolute;
+      font-family: 'Times New Roman', serif;
+      font-style: italic;
+      font-size: 26px;
+      color: var(--text-muted);
+      opacity: 0.05;
+      user-select: none;
+      transition: opacity 0.3s ease;
+    }
+    body.dark .wm { opacity: 0.08; }
+    .wm-1 { top: 8%; left: 6%; transform: rotate(-12deg); }
+    .wm-2 { top: 14%; right: 8%; transform: rotate(10deg); }
+    .wm-3 { top: 42%; left: 4%; transform: rotate(-8deg); }
+    .wm-4 { top: 46%; right: 5%; transform: rotate(14deg); }
+    .wm-5 { bottom: 18%; left: 8%; transform: rotate(8deg); }
+    .wm-6 { bottom: 12%; right: 7%; transform: rotate(-10deg); }
+    .wm-7 { top: 78%; left: 35%; transform: rotate(-4deg); }
+    .wm-8 { top: 22%; left: 45%; transform: rotate(6deg); font-size: 20px; }
+
+    /* TOP ACTION BUTTONS */
+    .top-actions {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 120;
+      display: flex;
+      gap: 8px;
+    }
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      font-size: 17px;
+      transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+    .icon-btn:active { transform: scale(0.9); }
+
+    /* CONNECTION STATUS BADGE */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: var(--card-hover);
+      color: var(--text-muted);
+      border: 1px solid var(--card-border);
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      display: inline-block;
+    }
+    .status-dot.yellow { background: #f59e0b; }
+
+    /* SEARCH HERO CONTAINER */
+    .search-hero {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 80vh;
+      padding: 24px 16px;
+      width: 100%;
+      max-width: 650px;
+      margin: 0 auto;
+      transition: min-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), padding 0.35s ease;
+    }
+
+    .search-hero.docked {
+      min-height: auto;
+      padding: 10px 14px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg);
+      border-bottom: 1px solid var(--card-border);
+      box-shadow: var(--shadow-sm);
+      max-width: 800px;
+    }
+
+    /* ANIMATED BOHR ATOM */
+    .atom-visual {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 12px;
+      position: relative;
+      transition: opacity 0.25s ease, max-height 0.25s ease, margin 0.25s ease;
+    }
+    .search-hero.docked .atom-visual {
+      opacity: 0;
+      max-height: 0;
+      margin: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .atom-svg { width: 100%; height: 100%; overflow: visible; }
+    .orbit {
+      stroke: var(--accent);
+      stroke-width: 1.6;
+      opacity: 0.6;
+      fill: none;
+      transform-origin: 50px 50px;
+    }
+    .orbit-1 { animation: spinOrbit 14s linear infinite; transform: rotate(30deg); }
+    .orbit-2 { animation: spinOrbit 18s linear infinite reverse; transform: rotate(-30deg); }
+    .orbit-3 { animation: spinOrbit 22s linear infinite; transform: rotate(90deg); }
+    @keyframes spinOrbit {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .nucleus { fill: var(--primary); filter: drop-shadow(0 0 6px var(--accent-glow)); }
+    .nucleus-glow {
+      fill: var(--accent);
+      opacity: 0.22;
+      animation: pulseGlow 2.5s ease-in-out infinite alternate;
+    }
+    @keyframes pulseGlow {
+      0% { r: 10px; opacity: 0.15; }
+      100% { r: 16px; opacity: 0.35; }
+    }
+
+    /* HERO BRAND IDENTITY */
+    .hero-brand {
+      text-align: center;
+      margin-bottom: 16px;
+      transition: opacity 0.25s ease, max-height 0.25s ease, margin 0.25s ease;
+    }
+    .search-hero.docked .hero-brand {
+      opacity: 0;
+      max-height: 0;
+      margin: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .hero-title {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .hero-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      max-width: 440px;
+      line-height: 1.45;
+    }
+
+    /* SEARCH BAR */
+    .search-bar-wrap {
+      position: relative;
+      width: 100%;
+      display: flex;
+      align-items: center;
+    }
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      width: 20px;
+      height: 20px;
+      color: var(--text-muted);
+      pointer-events: none;
+      transition: color 0.2s ease;
+    }
+    .search-hero.docked .search-icon { width: 17px; height: 17px; left: 14px; }
+    .search-input {
+      width: 100%;
+      height: 52px;
+      padding: 0 46px 0 48px;
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      border-radius: 26px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+      box-shadow: var(--shadow-md);
+      transition: all 0.25s ease;
+    }
+    .search-hero.docked .search-input {
+      height: 44px;
+      font-size: 14.5px;
+      padding: 0 40px 0 42px;
+      border-radius: 22px;
+      box-shadow: var(--shadow-sm);
+    }
+    .search-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-glow), var(--shadow-md);
+    }
+    .clear-btn {
+      position: absolute;
+      right: 14px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--card-border);
+      border: none;
+      color: var(--text-muted);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .clear-btn:active { transform: scale(0.9); }
+
+    /* FILTER PILLS HORIZONTAL SCROLL */
+    .filter-pills {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 10px 2px 2px 2px;
+      width: 100%;
+      max-width: 650px;
+      scrollbar-width: none;
+    }
+    .filter-pills::-webkit-scrollbar { display: none; }
+    .pill {
+      flex-shrink: 0;
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 18px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-sub);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .pill.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+      box-shadow: var(--shadow-sm);
+    }
+    .pill:active { transform: scale(0.95); }
+
+    /* CONTENT SECTIONS */
+    .main-content {
+      flex: 1;
+      padding: 10px 14px 40px 14px;
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+      position: relative;
+      z-index: 10;
+    }
+    .tab-view { display: none; }
+    .tab-view.active { display: block; }
+
+    /* STATS HEADER */
+    .results-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 8px 4px 14px 4px;
+      font-size: 12.5px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* QUESTION CARD */
+    .question-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .question-card:hover {
+      border-color: var(--primary-border);
+      box-shadow: var(--shadow-md);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .card-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      align-items: center;
+    }
+    .badge-id {
+      background: var(--primary);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 2px 7px;
+      border-radius: 5px;
+    }
+    .badge-chap {
+      background: var(--badge-bg);
+      color: var(--badge-text);
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 5px;
+    }
+    .badge-type {
+      background: var(--card-hover);
+      color: var(--text-sub);
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 2px 7px;
+      border-radius: 5px;
+    }
+
+    .btn-copy {
+      background: var(--card-hover);
+      border: 1px solid var(--card-border);
+      color: var(--text-sub);
+      padding: 4px 9px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-copy:active { transform: scale(0.92); background: var(--primary); color: #fff; }
+
+    .question-stem {
+      font-size: 15.5px;
+      font-weight: 600;
+      line-height: 1.6;
+      color: var(--text);
+      margin-bottom: 12px;
+      word-break: break-word;
+    }
+
+    .question-img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin: 8px 0 12px 0;
+      border: 1px solid var(--card-border);
+      display: block;
+    }
+
+    /* PART 1 OPTIONS */
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .option-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      background: var(--card-bg);
+      font-size: 14px;
+      color: var(--text-sub);
+      line-height: 1.45;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .option-item.selected {
+      border-color: var(--primary);
+      background: var(--badge-bg);
+      color: var(--badge-text);
+      font-weight: 600;
+    }
+    .option-item.correct {
+      background: var(--green-bg);
+      border-color: var(--green-border);
+      color: var(--green-text);
+      font-weight: 600;
+    }
+    .option-item.wrong {
+      background: var(--red-bg);
+      border-color: var(--red-border);
+      color: var(--red-text);
+      font-weight: 600;
+    }
+    .opt-label { font-weight: 700; min-width: 20px; }
+    .opt-check { margin-left: auto; font-weight: 700; font-size: 15px; }
+
+    /* PART 2 TRUE/FALSE */
+    .tf-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+    .tf-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      background: var(--card-bg);
+      font-size: 13.5px;
+    }
+    .tf-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 5px;
+      flex-shrink: 0;
+    }
+    .tf-badge.true { background: var(--green-bg); color: var(--green-text); border: 1px solid var(--green-border); }
+    .tf-badge.false { background: var(--red-bg); color: var(--red-text); border: 1px solid var(--red-border); }
+
+    /* SHORT ANSWER */
+    .short-ans-box {
+      background: var(--badge-bg);
+      border: 1px solid var(--primary-border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .short-ans-title { font-size: 13px; font-weight: 700; color: var(--badge-text); }
+    .short-ans-val { font-size: 15px; font-weight: 800; color: var(--primary); font-family: monospace; }
+
+    /* ACCORDION EXPLANATION */
+    .explain-card {
+      margin-top: 10px;
+      background: var(--card-hover);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .explain-title {
+      padding: 9px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    }
+    .explain-content {
+      padding: 10px 14px 14px 14px;
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: var(--text-sub);
+      border-top: 1px solid var(--card-border);
+      white-space: pre-line;
+      display: none;
+    }
+    .explain-card.open .explain-content { display: block; }
+
+    /* EXAMS LIST */
+    .exam-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+    }
+    .exam-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .exam-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .exam-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+    .exam-meta { font-size: 12px; font-weight: 600; color: var(--primary); }
+
+    /* BOTTOM NAV BAR */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: var(--card-bg);
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      z-index: 150;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      width: 25%;
+      height: 100%;
+      transition: color 0.15s ease;
+    }
+    .nav-item svg { width: 20px; height: 20px; }
+    .nav-item.active { color: var(--primary); }
+
+    /* PAGINATION */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin: 20px 0;
+    }
+    .page-btn {
+      padding: 7px 14px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-sub);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 74px;
+      left: 50%;
+      transform: translateX(-50%) translateY(30px);
+      background: var(--text);
+      color: var(--bg);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12.5px;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s ease;
+      z-index: 200;
+      box-shadow: var(--shadow-md);
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+  <!-- BACKGROUND WATERMARKS -->
+  <div class="physics-watermarks">
+    <div class="wm wm-1">p · V = n · R · T</div>
+    <div class="wm wm-2">Q = m · c · ΔT</div>
+    <div class="wm wm-3">B = 2π·10⁻⁷ · I / R</div>
+    <div class="wm wm-4">E = m · c²</div>
+    <div class="wm wm-5">v_rms = √(3RT/M)</div>
+    <div class="wm wm-6">N(t) = N₀ · 2^(-t/T)</div>
+    <div class="wm wm-7">Φ = B · S · cosα</div>
+    <div class="wm wm-8">ΔU = A + Q</div>
+  </div>
+
+  <!-- TOP ACTIONS -->
+  <div class="top-actions">
+    <button class="icon-btn" id="themeBtn" title="Chuyển chế độ Sáng / Tối">🌙</button>
+  </div>
+
+  <!-- SEARCH HERO CONTAINER -->
+  <div class="search-hero" id="searchHero">
+    
+    <div class="atom-visual">
+      <svg class="atom-svg" viewBox="0 0 100 100">
+        <ellipse class="orbit orbit-1" cx="50" cy="50" rx="46" ry="16"></ellipse>
+        <ellipse class="orbit orbit-2" cx="50" cy="50" rx="46" ry="16"></ellipse>
+        <ellipse class="orbit orbit-3" cx="50" cy="50" rx="46" ry="16"></ellipse>
+        <circle class="nucleus-glow" cx="50" cy="50" r="12"></circle>
+        <circle class="nucleus" cx="50" cy="50" r="8"></circle>
+      </svg>
+    </div>
+
+    <div class="hero-brand">
+      <div class="status-badge" id="apiStatusBadge">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Đang kiểm tra kết nối...</span>
+      </div>
+      <h1 class="hero-title">TRA CỨU VẬT LÍ 12</h1>
+      <p class="hero-subtitle">Ngân hàng 3.224 câu hỏi độc bản chuẩn hóa GDPT 2018 • Đáp án & Lời giải sư phạm</p>
+    </div>
+
+    <div class="search-bar-wrap">
+      <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+      </svg>
+      <input type="text" class="search-input" id="searchInput" placeholder="Nhập mã 6 số (000001) hoặc từ khóa..." autocomplete="off">
+      <button class="clear-btn" id="clearBtn">✕</button>
+    </div>
+
+    <div class="filter-pills" id="filterPills">
+      <button class="pill active" data-chap="all">Tất cả</button>
+      <button class="pill" data-chap="1">C1: Nhiệt</button>
+      <button class="pill" data-chap="2">C2: Khí</button>
+      <button class="pill" data-chap="3">C3: Từ trường</button>
+      <button class="pill" data-chap="4">C4: Hạt nhân</button>
+      <button class="pill" data-type="has_img">🖼️ Có ảnh</button>
+    </div>
+
+  </div>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="main-content">
+    
+    <!-- TAB 1: TRA CỨU CÂU HỎI -->
+    <section class="tab-view active" id="tabSearch">
+      <div class="results-meta">
+        <span id="resultsCount">Đang tải câu hỏi...</span>
+        <span id="resultsPage">Trang 1</span>
+      </div>
+      <div id="questionsContainer"></div>
+      <div class="pagination" id="paginationWrap" style="display:none;">
+        <button class="page-btn" id="prevPageBtn">← Trước</button>
+        <span id="pageIndicator" style="font-size:13px; font-weight:600;">1 / 1</span>
+        <button class="page-btn" id="nextPageBtn">Sau →</button>
+      </div>
+    </section>
+
+    <!-- TAB 2: DANH MỤC 8 ĐỀ THI -->
+    <section class="tab-view" id="tabExams">
+      <div class="results-meta">
+        <span>TRỌN BỘ 8 ĐỀ KIỂM TRA CHUẨN GDPT 2018</span>
+      </div>
+      <div id="examsContainer"></div>
+    </section>
+
+    <!-- TAB 3: SINH ĐỀ THI (28 CÂU) -->
+    <section class="tab-view" id="tabMockTest">
+      <div class="question-card" style="text-align:center;">
+        <h2 style="font-size:18px; margin-bottom:8px;">🎯 THI THỬ VẬT LÍ 12</h2>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">Cấu trúc chuẩn Bộ GD&ĐT 2025: 18 Trắc nghiệm + 4 Đúng/Sai + 6 Trả lời ngắn (28 câu)</p>
+        <button class="page-btn" id="btnGenExam" style="background:var(--primary); color:#fff; border:none; padding:10px 20px; font-size:14px; border-radius:20px;">
+          ⚡ Tạo Đề Thi Mới Ngẫu Nhiên
+        </button>
+      </div>
+      <div id="mockExamQuestions"></div>
+    </section>
+
+    <!-- TAB 4: THỐNG KÊ HỆ THỐNG -->
+    <section class="tab-view" id="tabStats">
+      <div class="question-card">
+        <h2 style="font-size:18px; margin-bottom:12px;">📊 THỐNG KÊ TOÀN BỘ CƠ SỞ DỮ LIỆU</h2>
+        <div id="statsContent" style="font-size:14px; line-height:1.7;">Đang tải số liệu...</div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- BOTTOM NAVIGATION -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" data-tab="tabSearch">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+      <span>Tra Cứu</span>
+    </div>
+    <div class="nav-item" data-tab="tabExams">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+      <span>8 Đề Thi</span>
+    </div>
+    <div class="nav-item" data-tab="tabMockTest">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      <span>Sinh Đề</span>
+    </div>
+    <div class="nav-item" data-tab="tabStats">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+      <span>Thống Kê</span>
+    </div>
+  </nav>
+
+  <div class="toast" id="toast">Đã sao chép!</div>
+
+  <!-- NẠP BẢN DỮ LIỆU ĐÓNG GÓI SẴN (STANDALONE FALLBACK) -->
+  <script src="js/questions_data.js"></script>
+
+  <script>
+    (function() {
+      // CẤU HÌNH API
+      // Khi chạy local hoặc proxy, tự động gọi API backend MariaDB;
+      // Khi deploy lên GitHub Pages tĩnh, tự động fallback sang window.QUESTIONS_DATABASE!
+      let API_URL = (location.hostname === '127.0.0.1' || location.hostname === 'localhost') 
+        ? 'http://127.0.0.1:8000/api' 
+        : '';
+      let isApiOnline = false;
+
+      // TRẠNG THÁI HIỆN TẠI
+      let currentPage = 1;
+      const pageSize = 15;
+      let totalPages = 1;
+      let activeChapter = 'all';
+      let activeOnlyImages = false;
+      let searchQuery = '';
+
+      // ELEMENTS
+      const themeBtn = document.getElementById('themeBtn');
+      const searchHero = document.getElementById('searchHero');
+      const searchInput = document.getElementById('searchInput');
+      const clearBtn = document.getElementById('clearBtn');
+      const apiStatusBadge = document.getElementById('apiStatusBadge');
+      const statusDot = document.getElementById('statusDot');
+      const statusText = document.getElementById('statusText');
+      const questionsContainer = document.getElementById('questionsContainer');
+      const resultsCount = document.getElementById('resultsCount');
+      const resultsPage = document.getElementById('resultsPage');
+      const paginationWrap = document.getElementById('paginationWrap');
+      const prevPageBtn = document.getElementById('prevPageBtn');
+      const nextPageBtn = document.getElementById('nextPageBtn');
+      const pageIndicator = document.getElementById('pageIndicator');
+      const toast = document.getElementById('toast');
+
+      // 1. THEME TOGGLE
+      const savedTheme = localStorage.getItem('vatly12_theme') || 'dark';
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark');
+        themeBtn.textContent = '☀️';
+      } else {
+        document.body.classList.remove('dark');
+        themeBtn.textContent = '🌙';
+      }
+      themeBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark');
+        const isDark = document.body.classList.contains('dark');
+        themeBtn.textContent = isDark ? '☀️' : '🌙';
+        localStorage.setItem('vatly12_theme', isDark ? 'dark' : 'light');
+      });
+
+      // 2. KIỂM TRA KẾT NỐI API & MARIADB
+      async function checkApiConnection() {
+        if (!API_URL) {
+          useLocalDataEngine('GitHub Pages (Offline/Standalone)');
+          return;
+        }
+        try {
+          const res = await fetch(`${API_URL}/health`, { signal: AbortSignal.timeout(2500) });
+          if (res.ok) {
+            const data = await res.json();
+            isApiOnline = true;
+            statusDot.className = 'status-dot';
+            statusText.textContent = `MariaDB API Online (${data.total_questions_in_db} câu)`;
+          } else {
+            useLocalDataEngine('MariaDB Offline → Dùng Dữ Liệu Tích Hợp');
+          }
+        } catch (e) {
+          useLocalDataEngine('GitHub Standalone (3.224 câu)');
+        }
+      }
+
+      function useLocalDataEngine(msg) {
+        isApiOnline = false;
+        statusDot.className = 'status-dot yellow';
+        statusText.textContent = msg;
+      }
+
+      // 3. TÌM KIẾM & RENDER CÂU HỎI
+      async function fetchQuestions(page = 1) {
+        currentPage = page;
+        questionsContainer.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted);">⏳ Đang nạp câu hỏi...</div>';
+
+        if (isApiOnline) {
+          // Gọi MariaDB Backend API
+          try {
+            let url = `${API_URL}/questions?page=${page}&page_size=${pageSize}`;
+            if (activeChapter !== 'all') url += `&chapter=${activeChapter}`;
+            if (activeOnlyImages) url += `&has_images=true`;
+            if (searchQuery) url += `&q=${encodeURIComponent(searchQuery)}`;
+
+            const res = await fetch(url);
+            const data = await res.json();
+            renderQuestionsList(data.data, data.total, data.page, data.total_pages);
+            return;
+          } catch (e) {
+            console.warn('API error, falling back to local bundle:', e);
+          }
+        }
+
+        // Fallback: Local Client-side Data Engine
+        if (window.QUESTIONS_DATABASE && window.QUESTIONS_DATABASE.length) {
+          let pool = window.QUESTIONS_DATABASE;
+          
+          if (activeChapter !== 'all') {
+            pool = pool.filter(q => String(q.chap || q.chapter) === String(activeChapter));
+          }
+          if (activeOnlyImages) {
+            pool = pool.filter(q => q.images && q.images.length > 0);
+          }
+          if (searchQuery) {
+            const qLower = searchQuery.toLowerCase().trim();
+            // Nếu là 6 chữ số: tìm chính xác theo ID
+            if (/^\d{6}$/.test(qLower)) {
+              pool = pool.filter(q => String(q.id) === qLower || String(q.ms) === qLower || String(q.canonical_id) === qLower);
+            } else {
+              pool = pool.filter(q => (q.stem && q.stem.toLowerCase().includes(qLower)) || (q.explanation && q.explanation.toLowerCase().includes(qLower)));
+            }
+          }
+
+          const total = pool.length;
+          totalPages = Math.ceil(total / pageSize) || 1;
+          const start = (page - 1) * pageSize;
+          const sliced = pool.slice(start, start + pageSize);
+          renderQuestionsList(sliced, total, page, totalPages);
+        } else {
+          questionsContainer.innerHTML = '<div style="text-align:center; padding:30px; color:var(--red-text);">⚠️ Không tải được dữ liệu!</div>';
+        }
+      }
+
+      function renderQuestionsList(items, total, page, pages) {
+        resultsCount.textContent = `Tìm thấy ${total.toLocaleString()} câu hỏi`;
+        resultsPage.textContent = `Trang ${page} / ${pages}`;
+        pageIndicator.textContent = `${page} / ${pages}`;
+        totalPages = pages;
+
+        if (pages > 1) {
+          paginationWrap.style.display = 'flex';
+          prevPageBtn.disabled = (page <= 1);
+          nextPageBtn.disabled = (page >= pages);
+        } else {
+          paginationWrap.style.display = 'none';
+        }
+
+        if (!items || items.length === 0) {
+          questionsContainer.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted); font-size:15px;">🔍 Không tìm thấy câu hỏi phù hợp. Hãy thử từ khóa khác!</div>';
+          return;
+        }
+
+        let html = '';
+        items.forEach((item, idx) => {
+          const qid = item.id || item.ms || String(idx + 1);
+          const chapTitle = item.chap_title || item.chapter_title || `Chương ${item.chap || item.chapter || 1}`;
+          const typeName = item.type_name || (item.type === 'part1_single_choice' ? 'Trắc nghiệm 4 lựa chọn' : (item.type === 'part2_true_false' ? 'Trắc nghiệm Đúng/Sai' : 'Trả lời ngắn'));
+          const qType = item.type || 'part1_single_choice';
+
+          html += `
+            <article class="question-card" id="q_card_${qid}">
+              <div class="card-header">
+                <div class="card-badges">
+                  <span class="badge-id">[MS.${qid}]</span>
+                  <span class="badge-chap">${chapTitle}</span>
+                  <span class="badge-type">${typeName}</span>
+                </div>
+                <button class="btn-copy" onclick="copyQuestion('${qid}')">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                  Sao chép
+                </button>
+              </div>
+
+              <div class="question-stem">${formatMathHtml(item.stem)}</div>
+          `;
+
+          // Images (xử lý link local hoặc remote)
+          if (item.images && item.images.length) {
+            item.images.forEach(img => {
+              let imgSrc = '';
+              if (typeof img === 'string') imgSrc = img;
+              else if (typeof img === 'object') imgSrc = img.local_path ? 'images/' + img.local_path.split('/').pop() : img.remote_url;
+              if (imgSrc.startsWith('/')) imgSrc = 'images/' + imgSrc.split('/').pop();
+              html += `<img src="${imgSrc}" class="question-img" alt="Hình minh họa" loading="lazy" onerror="this.src='https://www.physics.edu.vn/img/phys12/'+this.src.split('/').pop()">`;
+            });
+          }
+
+          // Options - Part 1
+          if (qType === 'part1_single_choice' && item.options && item.options.length) {
+            html += `<div class="options-grid">`;
+            item.options.forEach(opt => {
+              const optClean = formatMathHtml(opt);
+              const m = opt.match(/^([A-D])\./);
+              const optLetter = m ? m[1] : '';
+              const isCorrect = (item.answer === optLetter);
+
+              html += `
+                <div class="option-item ${isCorrect ? 'correct' : ''}" onclick="selectOption(this, '${optLetter}', '${item.answer}')">
+                  <span class="opt-label">${optLetter ? optLetter + '.' : ''}</span>
+                  <span>${optLetter ? optClean.replace(/^[A-D]\.\s*/, '') : optClean}</span>
+                  ${isCorrect ? '<span class="opt-check">✓</span>' : ''}
+                </div>
+              `;
+            });
+            html += `</div>`;
+          }
+
+          // Options - Part 2 (True/False)
+          if (qType === 'part2_true_false' && item.options && item.options.length) {
+            html += `<div class="tf-grid">`;
+            item.options.forEach((sub, sIdx) => {
+              const subLabel = String.fromCharCode(97 + sIdx);
+              const isTrue = item.answer && item.answer.includes(`${subLabel}: Đúng`);
+              html += `
+                <div class="tf-item">
+                  <span><strong>${subLabel})</strong> ${formatMathHtml(sub.replace(/^[a-d]\.\s*/i, ''))}</span>
+                  <span class="tf-badge ${isTrue ? 'true' : 'false'}">${isTrue ? 'ĐÚNG' : 'SAI'}</span>
+                </div>
+              `;
+            });
+            html += `</div>`;
+          }
+
+          // Part 3 (Short answer)
+          if (qType === 'part3_short_answer') {
+            html += `
+              <div class="short-ans-box">
+                <span class="short-ans-title">Đáp số chuẩn:</span>
+                <span class="short-ans-val">${formatMathHtml(item.answer)}</span>
+              </div>
+            `;
+          }
+
+          // Accordion Explanation
+          if (item.explanation) {
+            html += `
+              <div class="explain-card" onclick="this.classList.toggle('open')">
+                <div class="explain-title">
+                  <span>💡 Lời giải sư phạm chi tiết</span>
+                  <span style="font-size:11px;">Chạm để xem ▼</span>
+                </div>
+                <div class="explain-content">${formatMathHtml(item.explanation)}</div>
+              </div>
+            `;
+          }
+
+          html += `</article>`;
+        });
+
+        questionsContainer.innerHTML = html;
+      }
+
+      // 4. INTERACTION & EVENTS
+      searchInput.addEventListener('input', () => {
+        searchQuery = searchInput.value.trim();
+        clearBtn.style.display = searchQuery ? 'flex' : 'none';
+        if (searchQuery) {
+          searchHero.classList.add('docked');
+        } else if (activeChapter === 'all' && !activeOnlyImages) {
+          searchHero.classList.remove('docked');
+        }
+        fetchQuestions(1);
+      });
+
+      clearBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        searchQuery = '';
+        clearBtn.style.display = 'none';
+        if (activeChapter === 'all' && !activeOnlyImages) {
+          searchHero.classList.remove('docked');
+        }
+        fetchQuestions(1);
+      });
+
+      // Filter pills
+      document.querySelectorAll('.filter-pills .pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+          if (pill.dataset.chap) {
+            document.querySelectorAll('.filter-pills .pill[data-chap]').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            activeChapter = pill.dataset.chap;
+          } else if (pill.dataset.type === 'has_img') {
+            pill.classList.toggle('active');
+            activeOnlyImages = pill.classList.contains('active');
+          }
+          searchHero.classList.add('docked');
+          fetchQuestions(1);
+        });
+      });
+
+      prevPageBtn.addEventListener('click', () => {
+        if (currentPage > 1) {
+          fetchQuestions(currentPage - 1);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+
+      nextPageBtn.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+          fetchQuestions(currentPage + 1);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+
+      // BOTTOM NAVIGATION TABS
+      document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+          document.querySelectorAll('.bottom-nav .nav-item').forEach(i => i.classList.remove('active'));
+          item.classList.add('active');
+          const targetTab = item.dataset.tab;
+          document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+          document.getElementById(targetTab).classList.add('active');
+
+          if (targetTab === 'tabExams') loadExams();
+          if (targetTab === 'tabStats') loadStats();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      });
+
+      // LOAD EXAMS
+      async function loadExams() {
+        const examsContainer = document.getElementById('examsContainer');
+        examsContainer.innerHTML = '<div style="text-align:center; padding:30px;">⏳ Đang nạp danh mục đề thi...</div>';
+
+        const defaultExams = [
+          { slug: 'chap1', title: 'KIỂM TRA THƯỜNG XUYÊN 1', subtitle: 'Vật lí nhiệt (Chương 1)', total: 396 },
+          { slug: 'gk1', title: 'KIỂM TRA GIỮA KÌ 1', subtitle: 'Vật lí nhiệt & Khí (Chương 1 & 2)', total: 433 },
+          { slug: 'chap2', title: 'KIỂM TRA THƯỜNG XUYÊN 2', subtitle: 'Khí lí tưởng (Chương 2)', total: 532 },
+          { slug: 'chap12', title: 'KIỂM TRA THƯỜNG XUYÊN 3', subtitle: 'Tổng hợp Chương 1 & 2', total: 792 },
+          { slug: 'chap3', title: 'KIỂM TRA THƯỜNG XUYÊN 1 - KÌ 2', subtitle: 'Từ trường (Chương 3)', total: 547 },
+          { slug: 'gk2', title: 'KIỂM TRA GIỮA KÌ 2', subtitle: 'Từ trường & Hạt nhân (Chương 3 & 4)', total: 535 },
+          { slug: 'chap4', title: 'KIỂM TRA THƯỜNG XUYÊN 2 - KÌ 2', subtitle: 'Vật lí hạt nhân (Chương 4)', total: 520 },
+          { slug: 'chap34', title: 'KIỂM TRA THƯỜNG XUYÊN 3 - KÌ 2', subtitle: 'Tổng hợp Chương 3 & 4', total: 816 }
+        ];
+
+        let html = '';
+        defaultExams.forEach(ex => {
+          html += `
+            <div class="exam-card" onclick="filterByExam('${ex.slug}')">
+              <div class="exam-title">${ex.title}</div>
+              <div class="exam-subtitle">${ex.subtitle}</div>
+              <div class="exam-meta">📌 Gồm ${ex.total} câu hỏi độc bản • Chạm để mở đề →</div>
+            </div>
+          `;
+        });
+        examsContainer.innerHTML = html;
+      }
+
+      window.filterByExam = function(slug) {
+        document.querySelector('.bottom-nav .nav-item[data-tab="tabSearch"]').click();
+        searchHero.classList.add('docked');
+        if (window.QUESTIONS_DATABASE) {
+          const pool = window.QUESTIONS_DATABASE.filter(q => q.exam_slugs && q.exam_slugs.includes(slug));
+          renderQuestionsList(pool.slice(0, pageSize), pool.length, 1, Math.ceil(pool.length / pageSize));
+        }
+      };
+
+      // MOCK TEST GENERATOR
+      document.getElementById('btnGenExam').addEventListener('click', () => {
+        const mockContainer = document.getElementById('mockExamQuestions');
+        mockContainer.innerHTML = '<div style="text-align:center; padding:30px;">⚡ Đang sinh ngẫu nhiên 28 câu chuẩn Bộ GD&ĐT...</div>';
+
+        if (!window.QUESTIONS_DATABASE) return;
+        const p1 = window.QUESTIONS_DATABASE.filter(q => q.type === 'part1_single_choice').sort(() => 0.5 - Math.random()).slice(0, 18);
+        const p2 = window.QUESTIONS_DATABASE.filter(q => q.type === 'part2_true_false').sort(() => 0.5 - Math.random()).slice(0, 4);
+        const p3 = window.QUESTIONS_DATABASE.filter(q => q.type === 'part3_short_answer').sort(() => 0.5 - Math.random()).slice(0, 6);
+        const exam28 = [...p1, ...p2, ...p3];
+
+        let html = '<div style="font-size:14px; font-weight:700; margin:16px 0; color:var(--primary);">📋 ĐỀ THI 28 CÂU (18 TN + 4 Đ/S + 6 TLN):</div>';
+        exam28.forEach((item, idx) => {
+          html += `
+            <div class="question-card">
+              <div style="font-weight:700; margin-bottom:6px; color:var(--primary);">Câu ${idx + 1} [MS.${item.id}]:</div>
+              <div class="question-stem">${formatMathHtml(item.stem)}</div>
+              ${item.explanation ? `<div class="explain-card" onclick="this.classList.toggle('open')"><div class="explain-title">Xem đáp án & Lời giải ▼</div><div class="explain-content">${formatMathHtml(item.explanation)}</div></div>` : ''}
+            </div>
+          `;
+        });
+        mockContainer.innerHTML = html;
+      });
+
+      // LOAD STATS
+      async function loadStats() {
+        const statsContent = document.getElementById('statsContent');
+        statsContent.innerHTML = `
+          <p>• <strong>Tổng số câu hỏi:</strong> 3.224 câu độc bản chuẩn hóa</p>
+          <p>• <strong>Chương 1 (Vật lí nhiệt):</strong> 579 câu</p>
+          <p>• <strong>Chương 2 (Khí lí tưởng):</strong> 982 câu</p>
+          <p>• <strong>Chương 3 (Từ trường):</strong> 597 câu</p>
+          <p>• <strong>Chương 4 (Vật lí hạt nhân):</strong> 1.066 câu</p>
+          <p>• <strong>Phần I (Trắc nghiệm 4 lựa chọn):</strong> 1.945 câu</p>
+          <p>• <strong>Phần II (Trắc nghiệm Đúng/Sai):</strong> 415 câu</p>
+          <p>• <strong>Phần III (Trả lời ngắn):</strong> 864 câu</p>
+          <p>• <strong>Độ phủ đáp án:</strong> 100% (3.224 / 3.224)</p>
+          <p>• <strong>Độ phủ lời giải chi tiết:</strong> 100% (3.224 / 3.224)</p>
+          <p>• <strong>Hệ thống Database:</strong> MariaDB + REST API + Standalone PWA</p>
+        `;
+      }
+
+      // HELPER: SELECT OPTION IN PRACTICE
+      window.selectOption = function(el, letter, correctLetter) {
+        const parent = el.closest('.options-grid');
+        parent.querySelectorAll('.option-item').forEach(item => item.classList.remove('selected', 'wrong'));
+        if (letter === correctLetter) {
+          el.classList.add('correct');
+        } else {
+          el.classList.add('wrong');
+        }
+      };
+
+      // HELPER: COPY QUESTION
+      window.copyQuestion = function(id) {
+        if (!window.QUESTIONS_DATABASE) return;
+        const item = window.QUESTIONS_DATABASE.find(q => String(q.id) === String(id) || String(q.ms) === String(id));
+        if (!item) return;
+
+        let txt = `[MS.${item.id}] ${stripTags(item.stem)}\n\n`;
+        if (item.options && item.options.length) {
+          txt += item.options.map(o => stripTags(o)).join('\n') + '\n\n';
+        }
+        if (item.answer) txt += `Đáp án: ${stripTags(item.answer)}\n\n`;
+        if (item.explanation) txt += `Lời giải:\n${stripTags(item.explanation)}\n`;
+
+        navigator.clipboard.writeText(txt).then(() => {
+          showToast('Đã sao chép câu hỏi & lời giải!');
+        }).catch(() => showToast('Đã sao chép!'));
+      };
+
+      function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+      }
+
+      function stripTags(html) {
+        if (!html) return '';
+        const tmp = document.createElement('DIV');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
+      }
+
+      function formatMathHtml(str) {
+        if (!str) return '';
+        let s = String(str)
+          .replace(/\$/g, '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+        s = s.replace(/&lt;sub&gt;(.*?)&lt;\/sub&gt;/gi, '<sub>$1</sub>');
+        s = s.replace(/&lt;sup&gt;(.*?)&lt;\/sup&gt;/gi, '<sup>$1</sup>');
+        s = s.replace(/&lt;br\s*\/?&gt;/gi, '<br>');
+        s = s.replace(/&lt;b&gt;(.*?)&lt;\/b&gt;/gi, '<b>$1</b>');
+        s = s.replace(/&lt;i&gt;(.*?)&lt;\/i&gt;/gi, '<i>$1</i>');
+        return s;
+      }
+
+      // KHỞI ĐỘNG
+      checkApiConnection();
+      fetchQuestions(1);
+
+    })();
+  </script>
+</body>
+</html>
