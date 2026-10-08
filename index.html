@@ -868,7 +868,7 @@
           html += `<div class="tf-grid">`;
           item.options.forEach((sub, sIdx) => {
             const subLabel = String.fromCharCode(97 + sIdx);
-            const isTrue = item.answer && item.answer.includes(`${subLabel}: Đúng`);
+            const isTrue = new RegExp(subLabel + '[\\)\\:\\.]?\\s*Đúng', 'i').test(item.answer || '');
             html += `
               <div class="tf-item">
                 <span><strong>${subLabel})</strong> ${formatMathHtml(sub.replace(/^[a-d]\.\s*/i, ''))}</span>
@@ -1429,7 +1429,7 @@
             if (userAns && typeof userAns === 'object') {
               ['a', 'b', 'c', 'd'].forEach(sub => {
                 const subAns = userAns[sub];
-                const expectedTrue = officialAns.includes(`${sub}: Đúng`);
+                const expectedTrue = new RegExp(sub + '[\\)\\:\\.]?\\s*Đúng', 'i').test(officialAns);
                 const userSaidTrue = (subAns === 'Đúng');
                 if (subAns && ((expectedTrue && userSaidTrue) || (!expectedTrue && !userSaidTrue))) {
                   qSubCorrect++;
