@@ -117,21 +117,21 @@
     }
     .icon-btn:active { transform: scale(0.9); }
 
-    /* SEARCH HERO (IDLE: Dead Center) */
+    /* SEARCH HERO */
     .search-hero {
       position: relative; z-index: 10;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      min-height: 75vh; padding: 24px 16px;
+      min-height: auto; padding: 20px 14px 10px 14px;
       width: 100%; max-width: 650px; margin: 0 auto;
-      transition: min-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), padding 0.35s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .search-hero.docked {
-      min-height: auto; padding: 10px 14px;
       position: sticky; top: 0; z-index: 100;
       background: var(--bg); border-bottom: 1px solid var(--card-border);
       box-shadow: var(--shadow-sm); max-width: 800px;
+      padding: 8px 14px 8px 14px;
     }
 
     /* API STATUS BADGE */
@@ -143,11 +143,23 @@
       box-shadow: var(--shadow-sm); margin-bottom: 12px;
       transition: all 0.2s ease;
     }
+    .api-status-badge {
+      cursor: pointer; user-select: none;
+    }
+    .api-status-badge:hover {
+      filter: brightness(0.95); transform: translateY(-1px);
+    }
     .api-status-badge.online {
       background: var(--green-bg); border-color: var(--green-border); color: var(--green-text);
     }
+    .api-status-badge.ready {
+      background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.35); color: #059669;
+    }
     .api-status-badge.offline {
       background: var(--badge-bg); border-color: var(--primary-border); color: var(--badge-text);
+    }
+    .api-status-badge.ready .status-dot {
+      background: #10b981; box-shadow: 0 0 6px #10b981;
     }
     .status-dot {
       width: 7px; height: 7px; border-radius: 50%; background: currentColor;
@@ -246,13 +258,12 @@
     }
     .hint-tag:active { transform: scale(0.95); background: var(--card-hover); }
 
-    /* FILTER PILLS (SHOWN WHEN SEARCHING) */
+    /* FILTER PILLS */
     .filter-pills {
-      display: none; gap: 6px; overflow-x: auto;
-      padding: 8px 2px 2px 2px; width: 100%; max-width: 650px;
+      display: flex; gap: 6px; overflow-x: auto;
+      padding: 10px 2px 4px 2px; width: 100%; max-width: 650px;
       scrollbar-width: none;
     }
-    .search-hero.docked .filter-pills { display: flex; }
     .pill {
       flex-shrink: 0; font-size: 12px; font-weight: 600;
       padding: 4px 11px; border-radius: 16px; background: var(--card-bg);
@@ -482,6 +493,42 @@
       transition: all 0.25s ease; z-index: 200; box-shadow: var(--shadow-md);
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    /* MODAL POPUP DATABASE & API CONFIG */
+    .db-modal-overlay {
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .db-modal-overlay.open { display: flex; }
+    .db-modal-card {
+      background: var(--card-bg); border: 1.5px solid var(--card-border);
+      border-radius: 18px; max-width: 460px; width: 100%;
+      padding: 22px; box-shadow: var(--shadow-lg);
+      max-height: 90vh; overflow-y: auto;
+      animation: modalFadeIn 0.2s ease;
+    }
+    @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .db-modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--card-border);
+    }
+    .db-modal-title { font-size: 16px; font-weight: 800; color: var(--text); }
+    .db-modal-close {
+      background: var(--card-border); border: none; width: 28px; height: 28px;
+      border-radius: 50%; cursor: pointer; color: var(--text-muted); font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .db-stats-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px;
+    }
+    .db-stat-box {
+      background: var(--bg); border: 1px solid var(--card-border);
+      border-radius: 10px; padding: 10px; text-align: center;
+    }
+    .db-stat-num { font-size: 18px; font-weight: 800; color: var(--primary); }
+    .db-stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -515,9 +562,10 @@
     </div>
 
     <!-- API / DATABASE STATUS BADGE -->
-    <div class="api-status-badge offline" id="apiStatusBadge">
+    <div class="api-status-badge ready" id="apiStatusBadge" onclick="openDbModal()" title="Chạm để xem thông tin Cơ sở dữ liệu & Cấu hình API">
       <span class="status-dot"></span>
-      <span id="apiStatusText">Đang khởi tạo dữ liệu...</span>
+      <span id="apiStatusText">🟢 Cơ sở dữ liệu: 3.224 câu (Sẵn sàng)</span>
+      <span style="font-size:11px; opacity:0.7; margin-left:2px;">⚙️</span>
     </div>
 
     <div class="hero-brand">
@@ -545,14 +593,14 @@
       </div>
     </div>
 
-    <!-- FILTER PILLS (HIỂN THỊ KHI DOCKED ĐỂ LỌC NÂNG CAO) -->
+    <!-- FILTER PILLS (LỌC NHANH 4 CHƯƠNG) -->
     <div class="filter-pills" id="filterPills">
-      <button class="pill active" data-chap="all">Tất cả</button>
-      <button class="pill" data-chap="1">C1: Nhiệt</button>
-      <button class="pill" data-chap="2">C2: Khí</button>
-      <button class="pill" data-chap="3">C3: Từ trường</button>
-      <button class="pill" data-chap="4">C4: Hạt nhân</button>
-      <button class="pill" data-type="has_img">🖼️ Có ảnh</button>
+      <button class="pill active" data-chap="all">Tất cả (3.224)</button>
+      <button class="pill" data-chap="1">C1: Nhiệt (579)</button>
+      <button class="pill" data-chap="2">C2: Khí (982)</button>
+      <button class="pill" data-chap="3">C3: Từ trường (597)</button>
+      <button class="pill" data-chap="4">C4: Hạt nhân (1.066)</button>
+      <button class="pill" data-type="has_img">🖼️ Có ảnh (267)</button>
     </div>
 
   </div>
@@ -560,9 +608,9 @@
   <!-- MAIN CONTENT CONTAINER -->
   <main class="main-content">
     
-    <!-- TAB 1: TRA CỨU CÂU HỎI (CHỈ TẢI KHI GÕ TÌM KIẾM) -->
+    <!-- TAB 1: TRA CỨU CÂU HỎI & KHÁM PHÁ NGÂN HÀNG CÂU HỎI -->
     <section class="tab-view active" id="tabSearch">
-      <div id="searchResultsArea" style="display:none;">
+      <div id="searchResultsArea">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:12.5px; color:var(--text-muted); font-weight:600;">
           <span id="resultsCount">Kết quả tra cứu</span>
           <span id="resultsPagingInfo"></span>
@@ -692,13 +740,88 @@
 
   <div class="toast" id="toast">Đã sao chép!</div>
 
+  <!-- MODAL THÔNG TIN CƠ SỞ DỮ LIỆU & CẤU HÌNH KẾT NỐI API -->
+  <div class="db-modal-overlay" id="dbModal" onclick="closeDbModal(event)">
+    <div class="db-modal-card" onclick="event.stopPropagation()">
+      <div class="db-modal-header">
+        <div class="db-modal-title">📊 Cơ Sở Dữ Liệu Vật Lí 12</div>
+        <button class="db-modal-close" onclick="closeDbModal()">✕</button>
+      </div>
+
+      <div style="margin-bottom:14px; font-size:12.5px; line-height:1.5; color:var(--text-sub);">
+        Trạng thái: <strong id="modalDbStatus" style="color:var(--primary);">Cơ sở dữ liệu tích hợp sẵn sàng</strong>
+      </div>
+
+      <div class="db-stats-grid">
+        <div class="db-stat-box">
+          <div class="db-stat-num">3.224</div>
+          <div class="db-stat-label">Tổng số câu hỏi</div>
+        </div>
+        <div class="db-stat-box">
+          <div class="db-stat-num">579</div>
+          <div class="db-stat-label">Chương 1: Nhiệt học</div>
+        </div>
+        <div class="db-stat-box">
+          <div class="db-stat-num">982</div>
+          <div class="db-stat-label">Chương 2: Khí lí tưởng</div>
+        </div>
+        <div class="db-stat-box">
+          <div class="db-stat-num">597</div>
+          <div class="db-stat-label">Chương 3: Từ trường</div>
+        </div>
+        <div class="db-stat-box">
+          <div class="db-stat-num">1.066</div>
+          <div class="db-stat-label">Chương 4: Hạt nhân</div>
+        </div>
+        <div class="db-stat-box">
+          <div class="db-stat-num">267</div>
+          <div class="db-stat-label">Câu hỏi có hình ảnh</div>
+        </div>
+      </div>
+
+      <div style="background:var(--bg); border:1px solid var(--card-border); border-radius:10px; padding:10px 12px; margin-bottom:16px; font-size:12px; color:var(--text-sub); line-height:1.45;">
+        📌 <strong>Phân loại cấu trúc đề:</strong><br>
+        • Trắc nghiệm 4 phương án: <strong>1.945 câu</strong><br>
+        • Trắc nghiệm Đúng / Sai: <strong>415 câu</strong><br>
+        • Trả lời ngắn / Điền đáp số: <strong>864 câu</strong>
+      </div>
+
+      <div style="padding-top:12px; border-top:1px solid var(--card-border);">
+        <div style="font-size:13px; font-weight:700; margin-bottom:6px; color:var(--text);">
+          ⚡ Kết Nối MariaDB Server API
+        </div>
+        <p style="font-size:11.5px; color:var(--text-muted); margin-bottom:10px; line-height:1.45;">
+          Hỗ trợ kết nối máy chủ MariaDB đang chạy trên máy (Localhost, WiFi LAN, hoặc Cloudflare/Pinggy Tunnel):
+        </p>
+        <div style="display:flex; gap:8px; margin-bottom:10px;">
+          <input type="text" id="customApiInput" placeholder="Ví dụ: https://your-server.com/api" style="flex:1; height:38px; padding:0 10px; border-radius:8px; border:1px solid var(--card-border); background:var(--bg); color:var(--text); font-size:12px; outline:none;">
+          <button id="btnSaveCustomApi" style="padding:0 14px; height:38px; border-radius:8px; background:var(--primary); color:#fff; border:none; font-size:12px; font-weight:700; cursor:pointer;">Lưu</button>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button id="btnTestApi" style="flex:1; height:34px; border-radius:8px; background:var(--card-hover); border:1px solid var(--card-border); color:var(--text); font-size:11.5px; font-weight:600; cursor:pointer;">Kiểm tra kết nối</button>
+          <button id="btnResetApi" style="height:34px; padding:0 12px; border-radius:8px; background:transparent; border:1px solid var(--card-border); color:var(--text-muted); font-size:11.5px; cursor:pointer;">Mặc định</button>
+        </div>
+        <div id="apiTestMsg" style="margin-top:8px; font-size:11.5px; text-align:center; min-height:16px;"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- NẠP SCRIPT DỮ LIỆU ĐÓNG GÓI OFFLINE NẾU CÓ -->
   <script src="js/questions_data.js"></script>
 
   <script>
     (function() {
       // 1. CẤU HÌNH API & NATIVE BRIDGE
-      const API_BASE = 'http://127.0.0.1:8000/api';
+      function getApiBase() {
+        const custom = localStorage.getItem('vatly12_custom_api');
+        if (custom && custom.trim()) return custom.trim().replace(/\/+$/, '');
+        if (location.protocol === 'http:' && (location.hostname === '127.0.0.1' || location.hostname === 'localhost' || location.port === '8000')) {
+          return window.location.origin + '/api';
+        }
+        return null;
+      }
+
+      let API_BASE = getApiBase();
       let isApiOnline = false;
       const isAndroidApp = (typeof window.AndroidBridge !== 'undefined');
 
@@ -715,6 +838,13 @@
       const toast = document.getElementById('toast');
       const apiStatusBadge = document.getElementById('apiStatusBadge');
       const apiStatusText = document.getElementById('apiStatusText');
+      const dbModal = document.getElementById('dbModal');
+      const modalDbStatus = document.getElementById('modalDbStatus');
+      const customApiInput = document.getElementById('customApiInput');
+      const btnSaveCustomApi = document.getElementById('btnSaveCustomApi');
+      const btnTestApi = document.getElementById('btnTestApi');
+      const btnResetApi = document.getElementById('btnResetApi');
+      const apiTestMsg = document.getElementById('apiTestMsg');
 
       // STATE
       let activeChapter = 'all';
@@ -762,43 +892,52 @@
 
       // 3. KIỂM TRA TRẠNG THÁI REST API MARIADB
       async function detectApi() {
-        try {
-          const ctrl = new AbortController();
-          const tId = setTimeout(() => ctrl.abort(), 1200);
-          const res = await fetch(API_BASE + '/health', { signal: ctrl.signal });
-          clearTimeout(tId);
-          if (res.ok) {
-            const info = await res.json();
-            if (info.status === 'healthy') {
-              isApiOnline = true;
-              apiStatusBadge.className = 'api-status-badge online';
-              apiStatusText.textContent = `⚡ MariaDB API (3.224 câu - Online)`;
-              return;
+        API_BASE = getApiBase();
+        if (API_BASE) {
+          try {
+            const ctrl = new AbortController();
+            const tId = setTimeout(() => ctrl.abort(), 1800);
+            const res = await fetch(API_BASE + '/health', { signal: ctrl.signal });
+            clearTimeout(tId);
+            if (res.ok) {
+              const info = await res.json();
+              if (info.status === 'healthy') {
+                isApiOnline = true;
+                apiStatusBadge.className = 'api-status-badge online';
+                apiStatusText.textContent = `⚡ MariaDB Server: 3.224 câu (Online)`;
+                if (modalDbStatus) modalDbStatus.innerHTML = `<span style="color:#10b981;">⚡ Kết nối trực tiếp MariaDB Server (${API_BASE})</span>`;
+                return true;
+              }
             }
+          } catch (e) {
+            // API offline
           }
-        } catch (e) {
-          // offline
         }
         isApiOnline = false;
-        apiStatusBadge.className = 'api-status-badge offline';
-        apiStatusText.textContent = `📦 Chế độ Offline (3.224 câu)`;
+        apiStatusBadge.className = 'api-status-badge ready';
+        apiStatusText.textContent = `🟢 Cơ sở dữ liệu: 3.224 câu (Sẵn sàng)`;
+        if (modalDbStatus) modalDbStatus.innerHTML = `<span style="color:#059669;">🟢 Cơ sở dữ liệu tích hợp sẵn (3.224 câu độc bản GDPT 2018)</span>`;
+        return false;
       }
-      detectApi();
 
-      // 4. TRUY XUẤT DỮ LIỆU CÂU HỎI (LAZY LOAD FALLBACK)
+      // 4. TRUY XUẤT DỮ LIỆU CÂU HỎI (POLLING & CACHE AN TOÀN)
       async function getDataset() {
         if (datasetCache && datasetCache.length) return datasetCache;
-        if (window.QUESTIONS_DATABASE && window.QUESTIONS_DATABASE.length) {
-          datasetCache = window.QUESTIONS_DATABASE;
-          return datasetCache;
-        }
         if (window.QUESTIONS_DATA && window.QUESTIONS_DATA.length) {
           datasetCache = window.QUESTIONS_DATA;
           return datasetCache;
         }
-        if (typeof QUESTIONS_DATABASE !== 'undefined' && QUESTIONS_DATABASE.length) {
-          datasetCache = QUESTIONS_DATABASE;
+        if (window.QUESTIONS_DATABASE && window.QUESTIONS_DATABASE.length) {
+          datasetCache = window.QUESTIONS_DATABASE;
           return datasetCache;
+        }
+        // Chờ script questions_data.js nếu đang tải
+        for (let i = 0; i < 35; i++) {
+          if (window.QUESTIONS_DATA && window.QUESTIONS_DATA.length) {
+            datasetCache = window.QUESTIONS_DATA;
+            return datasetCache;
+          }
+          await new Promise(r => setTimeout(r, 100));
         }
         try {
           const res = await fetch('data/master_merged_questions.json');
@@ -807,7 +946,7 @@
             return datasetCache;
           }
         } catch(e) {}
-        return [];
+        return window.QUESTIONS_DATA || [];
       }
 
       // 5. CORE ENGINE: VIRTUAL VIEWPORT-ONLY RENDERING
@@ -992,30 +1131,54 @@
         nativeHaptic(15);
       });
 
+      // Render danh sách câu hỏi mặc định theo bộ lọc chương
+      async function renderDefaultQuestions() {
+        const data = await getDataset();
+        if (!data || !data.length) {
+          questionsContainer.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted);">⏳ Đang nạp cơ sở dữ liệu câu hỏi...</div>';
+          return;
+        }
+        let filtered = data;
+        if (activeChapter !== 'all') {
+          filtered = filtered.filter(q => String(q.chap || q.chapter) === String(activeChapter));
+        }
+        if (activeOnlyImages) {
+          filtered = filtered.filter(q => q.images && q.images.length > 0);
+        }
+        const chapNames = {
+          'all': 'Tất cả 4 chương',
+          '1': 'Chương 1: Vật lí nhiệt',
+          '2': 'Chương 2: Khí lí tưởng',
+          '3': 'Chương 3: Từ trường',
+          '4': 'Chương 4: Vật lí hạt nhân'
+        };
+        const label = chapNames[activeChapter] || 'Danh mục';
+        resultsCount.textContent = `📚 ${label} (${filtered.length.toLocaleString('vi-VN')} câu)`;
+        renderVirtualQuestionCards(filtered, questionsContainer);
+      }
+
       async function handleSearchInput() {
         const val = searchInput.value.trim();
         clearBtn.style.display = val ? 'flex' : 'none';
 
         if (!val) {
           searchHero.classList.remove('docked');
-          searchResultsArea.style.display = 'none';
-          questionsContainer.innerHTML = '';
+          renderDefaultQuestions();
           return;
         }
 
         searchHero.classList.add('docked');
-        searchResultsArea.style.display = 'block';
         questionsContainer.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted);">⏳ Đang tra cứu câu hỏi...</div>';
 
         // 1. Thử gọi API MariaDB nếu Online
-        if (isApiOnline) {
+        if (isApiOnline && API_BASE) {
           try {
             if (/^\d{6}$/.test(val)) {
               // Tìm chính xác theo ID 6 số
               const res = await fetch(`${API_BASE}/questions/${val}`);
               if (res.ok) {
                 const q = await res.json();
-                resultsCount.textContent = `Tìm thấy 1 câu hỏi từ MariaDB API`;
+                resultsCount.textContent = `Tìm thấy 1 câu hỏi từ MariaDB Server`;
                 renderVirtualQuestionCards([q], questionsContainer);
                 return;
               }
@@ -1032,7 +1195,7 @@
                   if (activeOnlyImages) {
                     results = results.filter(q => q.images && q.images.length > 0);
                   }
-                  resultsCount.textContent = `Tìm thấy ${results.length} câu hỏi phù hợp (MariaDB)`;
+                  resultsCount.textContent = `Tìm thấy ${results.length} câu hỏi phù hợp (MariaDB Server)`;
                   renderVirtualQuestionCards(results, questionsContainer);
                   return;
                 }
@@ -1043,7 +1206,7 @@
           }
         }
 
-        // 2. Chế độ Offline Fallback
+        // 2. Chế độ Client Database
         const data = await getDataset();
         if (!data || !data.length) {
           questionsContainer.innerHTML = '<div style="text-align:center; padding:30px; color:var(--red-text);">⚠️ Không thể nạp dữ liệu câu hỏi.</div>';
@@ -1091,6 +1254,8 @@
           }
           if (searchInput.value.trim()) {
             handleSearchInput();
+          } else {
+            renderDefaultQuestions();
           }
         });
       });
@@ -1586,6 +1751,10 @@
 
       // 12. ANDROID HARDWARE BACK BUTTON
       window.__onHardwareBack = function() {
+        if (dbModal && dbModal.classList.contains('open')) {
+          closeDbModal();
+          return true;
+        }
         if (examActiveScreen.style.display === 'block') {
           if (confirm('Bạn có muốn dừng bài thi và quay lại không?')) {
             clearInterval(examTimerInterval);
@@ -1608,6 +1777,84 @@
         }
         return false;
       };
+
+      // 13. MODAL QUẢN LÝ CƠ SỞ DỮ LIỆU & CẤU HÌNH API
+      window.openDbModal = function() {
+        nativeHaptic(15);
+        if (customApiInput) {
+          customApiInput.value = localStorage.getItem('vatly12_custom_api') || '';
+        }
+        if (apiTestMsg) apiTestMsg.textContent = '';
+        if (dbModal) dbModal.classList.add('open');
+      };
+
+      window.closeDbModal = function(e) {
+        if (!e || e.target === dbModal || e.target.classList.contains('db-modal-close')) {
+          if (dbModal) dbModal.classList.remove('open');
+        }
+      };
+
+      if (btnSaveCustomApi) {
+        btnSaveCustomApi.addEventListener('click', async () => {
+          nativeHaptic(20);
+          const val = customApiInput.value.trim();
+          if (val) {
+            localStorage.setItem('vatly12_custom_api', val);
+            showToast('Đã lưu URL API tùy chỉnh!');
+          } else {
+            localStorage.removeItem('vatly12_custom_api');
+            showToast('Đã chuyển về CSDL mặc định!');
+          }
+          await detectApi();
+          if (!searchInput.value.trim()) {
+            renderDefaultQuestions();
+          }
+        });
+      }
+
+      if (btnTestApi) {
+        btnTestApi.addEventListener('click', async () => {
+          nativeHaptic(15);
+          const val = (customApiInput.value.trim() || getApiBase());
+          if (!val) {
+            apiTestMsg.innerHTML = '<span style="color:var(--text-muted);">Chưa nhập URL API.</span>';
+            return;
+          }
+          apiTestMsg.innerHTML = '<span style="color:var(--primary);">⏳ Đang kiểm tra kết nối...</span>';
+          try {
+            const ctrl = new AbortController();
+            const tId = setTimeout(() => ctrl.abort(), 2500);
+            const res = await fetch(val.replace(/\/+$/, '') + '/health', { signal: ctrl.signal });
+            clearTimeout(tId);
+            if (res.ok) {
+              const j = await res.json();
+              if (j.status === 'healthy') {
+                apiTestMsg.innerHTML = '<span style="color:#10b981; font-weight:700;">✓ Kết nối thành công! MariaDB sẵn sàng.</span>';
+                return;
+              }
+            }
+          } catch(e) {}
+          apiTestMsg.innerHTML = '<span style="color:#ef4444; font-weight:700;">✕ Không thể kết nối. Vui lòng kiểm tra lại URL.</span>';
+        });
+      }
+
+      if (btnResetApi) {
+        btnResetApi.addEventListener('click', async () => {
+          nativeHaptic(15);
+          localStorage.removeItem('vatly12_custom_api');
+          if (customApiInput) customApiInput.value = '';
+          if (apiTestMsg) apiTestMsg.innerHTML = '<span style="color:#10b981;">Đã khôi phục CSDL Tích hợp Mặc định.</span>';
+          await detectApi();
+          showToast('Đã khôi phục mặc định!');
+        });
+      }
+
+      // 14. KHỞI TẠO ỨNG DỤNG LẦN ĐẦU
+      async function initApp() {
+        await detectApi();
+        await renderDefaultQuestions();
+      }
+      initApp();
 
     })();
   </script>
