@@ -9,6 +9,8 @@
   <title>Tra Cứu Vật Lí 12 - GDPT 2018</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="icon.png">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="js/google_sync.js"></script>
 
   <style>
     :root {
@@ -679,6 +681,7 @@
 
   <!-- TOP ACTIONS -->
   <div class="top-actions">
+    <button class="icon-btn" id="accountBtn" title="Tài khoản & Đồng bộ Google Sheets" onclick="openAccountModal()">👤</button>
     <a href="ui_bento_hub.html" class="icon-btn" title="Bộ sưu tập Giao diện & Hiệu ứng Fluid Motion" style="text-decoration:none;">🎨</a>
     <button class="icon-btn" id="themeBtn" title="Chuyển chế độ Sáng / Tối">🌙</button>
   </div>
@@ -874,6 +877,87 @@
   </nav>
 
   <div class="toast" id="toast">Đã sao chép!</div>
+
+  <!-- MODAL TÀI KHOẢN & ĐỒNG BỘ GOOGLE (PHƯƠNG ÁN 3: GOOGLE SHEETS) -->
+  <div class="db-modal-overlay" id="accountModal" onclick="closeAccountModal(event)">
+    <div class="db-modal-card" onclick="event.stopPropagation()">
+      <div class="db-modal-header">
+        <div class="db-modal-title" style="display:flex; align-items:center; gap:8px;">
+          <span>☁️</span>
+          <span>Tài Khoản & Đồng Bộ Google Sheets</span>
+        </div>
+        <button class="db-modal-close" onclick="closeAccountModal()">✕</button>
+      </div>
+
+      <div style="margin-bottom:14px; display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-size:12.5px; color:var(--text-sub);">Đồng bộ đám mây:</span>
+        <span id="cloudSyncStatusBadge" style="font-size:12px; font-weight:700;">💾 Lưu trên máy cục bộ</span>
+      </div>
+
+      <!-- KHI ĐÃ ĐĂNG NHẬP -->
+      <div id="accProfileSection" style="display:none; background:var(--card-hover); border:1px solid var(--card-border); border-radius:14px; padding:16px; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+          <img id="accUserAvatar" src="" style="width:46px; height:46px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);" alt="Avatar">
+          <div style="flex:1; overflow:hidden;">
+            <div id="accUserName" style="font-size:15px; font-weight:800; color:var(--text); white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">Học sinh</div>
+            <div id="accUserEmail" style="font-size:12px; color:var(--text-muted); white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">email@gmail.com</div>
+          </div>
+          <button onclick="GoogleSync.logout()" style="padding:6px 12px; border-radius:8px; border:1px solid var(--card-border); background:var(--card-bg); font-size:12px; font-weight:700; cursor:pointer; color:var(--red-text);">Đăng xuất</button>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px;">
+          <div style="background:var(--card-bg); padding:8px 10px; border-radius:8px; border:1px solid var(--card-border);">
+            <div style="color:var(--text-muted);">Câu đã lưu:</div>
+            <div id="accBookmarkCount" style="font-weight:800; font-size:14px; color:var(--primary);">0 câu</div>
+          </div>
+          <div style="background:var(--card-bg); padding:8px 10px; border-radius:8px; border:1px solid var(--card-border);">
+            <div style="color:var(--text-muted);">Chế độ nảy lò xo:</div>
+            <div style="font-weight:700; font-size:13px; color:#10b981;">BẬT (60 FPS)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KHI CHƯA ĐĂNG NHẬP (GOOGLE SIGN IN) -->
+      <div id="accLoginSection" style="background:var(--card-hover); border:1px solid var(--card-border); border-radius:14px; padding:18px; margin-bottom:16px; text-align:center;">
+        <div style="font-size:14.5px; font-weight:700; margin-bottom:6px;">Đăng Nhập Tài Khoản Google</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:14px; line-height:1.45;">
+          Đồng bộ cấu hình trang web, các câu hỏi đã lưu và lịch sử kết quả thi cử trên mọi thiết bị.
+        </div>
+        
+        <!-- Google GIS button -->
+        <div id="g_id_onload"
+             data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+             data-callback="GoogleSync.handleCredentialResponse"
+             data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="outline" data-text="signin_with" data-size="large" data-logo_alignment="left" style="display:flex; justify-content:center; margin-bottom:10px;"></div>
+
+        <!-- Nhập Email Nhanh -->
+        <div style="padding-top:12px; border-top:1px dashed var(--card-border); display:flex; gap:6px;">
+          <input type="email" id="quickEmailInput" placeholder="Hoặc nhập email học sinh..." style="flex:1; height:36px; border-radius:8px; border:1px solid var(--card-border); padding:0 10px; font-size:12.5px; background:var(--card-bg); color:var(--text); outline:none;">
+          <button onclick="handleQuickEmailLogin()" style="padding:0 12px; height:36px; border-radius:8px; background:var(--primary); color:#fff; font-size:12px; font-weight:700; border:none; cursor:pointer;">Lưu</button>
+        </div>
+      </div>
+
+      <!-- CẤU HÌNH LIÊN KẾT GOOGLE SHEETS -->
+      <div style="margin-bottom:16px;">
+        <label style="font-size:12px; font-weight:700; color:var(--text); display:block; margin-bottom:6px;">
+          📊 Webhook URL Google Sheets (Apps Script):
+        </label>
+        <input type="text" id="sheetWebhookInput" placeholder="https://script.google.com/macros/s/.../exec" style="width:100%; height:38px; border-radius:8px; border:1px solid var(--card-border); padding:0 10px; font-size:12px; background:var(--card-bg); color:var(--text); outline:none; font-family:monospace; margin-bottom:8px;">
+        <div style="display:flex; gap:8px;">
+          <button id="btnSaveSheetWebhook" style="flex:1; padding:8px; border-radius:8px; background:var(--primary); color:#fff; border:none; font-size:12px; font-weight:700; cursor:pointer;">💾 Lưu URL</button>
+          <button id="btnTestSheetWebhook" style="flex:1; padding:8px; border-radius:8px; background:var(--card-hover); border:1px solid var(--card-border); color:var(--text); font-size:12px; font-weight:700; cursor:pointer;">🔍 Kiểm tra</button>
+          <button onclick="GoogleSync.syncToCloud(); window.showToast('Đang gửi đồng bộ lên Google Sheets...');" style="flex:1; padding:8px; border-radius:8px; background:#10b981; color:#fff; border:none; font-size:12px; font-weight:700; cursor:pointer;">☁️ Đồng bộ</button>
+        </div>
+        <div id="sheetWebhookTestMsg" style="font-size:11.5px; margin-top:6px;"></div>
+      </div>
+
+      <div style="background:var(--bg); border:1px solid var(--card-border); border-radius:10px; padding:10px 12px; font-size:11.5px; color:var(--text-muted); line-height:1.5;">
+        💡 <strong>Dành cho Giáo viên:</strong> File mã nguồn Google Apps Script đã được lưu sẵn tại <code style="color:var(--primary);">google_sheet_backend.gs</code> trong thư mục dự án.
+      </div>
+    </div>
+  </div>
 
   <!-- MODAL THÔNG TIN CƠ SỞ DỮ LIỆU & CẤU HÌNH KẾT NỐI API -->
   <div class="db-modal-overlay" id="dbModal" onclick="closeDbModal(event)">
@@ -1785,8 +1869,19 @@
         else if (totalScore >= 8.0) rank = '🎉 Giỏi!';
         else if (totalScore >= 6.5) rank = '👍 Khá!';
         else if (totalScore >= 5.0) rank = '🙂 Đạt trung bình';
-        else rank = '💪 Cần ôn tập thêm';
         document.getElementById('scoreRankDisplay').textContent = rank;
+
+        // Tự động đồng bộ kết quả thi lên Google Sheets (Phương án 3)
+        if (window.GoogleSync && window.GoogleSync.recordExamResult) {
+          window.GoogleSync.recordExamResult({
+            examCode: 'Thi Thử GDPT 2018 (28 câu)',
+            score: totalScore.toFixed(2),
+            duration: `${Math.floor((3000 - examTimeRemaining)/60)}:${String((3000 - examTimeRemaining)%60).padStart(2,'0')}`,
+            correctCount: correctP1 + correctP3,
+            totalQuestions: 28,
+            details: { p1: scoreP1Val.toFixed(2), p2: scoreP2Val.toFixed(2), p3: scoreP3Val.toFixed(2) }
+          });
+        }
 
         // Render Review Cards với Virtual Viewport Optimization
         let reviewHtml = '';
@@ -1900,6 +1995,10 @@
 
       // 12. ANDROID HARDWARE BACK BUTTON
       window.__onHardwareBack = function() {
+        if (accountModal && accountModal.classList.contains('open')) {
+          closeAccountModal();
+          return true;
+        }
         if (dbModal && dbModal.classList.contains('open')) {
           closeDbModal();
           return true;
@@ -1927,7 +2026,93 @@
         return false;
       };
 
-      // 13. MODAL QUẢN LÝ CƠ SỞ DỮ LIỆU & CẤU HÌNH API
+      // 13a. MODAL TÀI KHOẢN & ĐỒNG BỘ GOOGLE SHEETS
+      const accountModal = document.getElementById('accountModal');
+      const sheetWebhookInput = document.getElementById('sheetWebhookInput');
+      const btnSaveSheetWebhook = document.getElementById('btnSaveSheetWebhook');
+      const btnTestSheetWebhook = document.getElementById('btnTestSheetWebhook');
+      const sheetWebhookTestMsg = document.getElementById('sheetWebhookTestMsg');
+
+      window.openAccountModal = function() {
+        nativeHaptic(15);
+        if (sheetWebhookInput) {
+          sheetWebhookInput.value = localStorage.getItem('vatly12_sheet_webhook_url') || '';
+        }
+        if (sheetWebhookTestMsg) sheetWebhookTestMsg.textContent = '';
+        if (window.GoogleSync && window.GoogleSync.updateUI) {
+          window.GoogleSync.updateUI();
+        }
+        if (accountModal) accountModal.classList.add('open');
+      };
+
+      window.closeAccountModal = function(e) {
+        if (!e || e.target === accountModal || e.target.classList.contains('db-modal-close')) {
+          if (accountModal) accountModal.classList.remove('open');
+        }
+      };
+
+      window.handleQuickEmailLogin = function() {
+        const input = document.getElementById('quickEmailInput');
+        if (!input || !input.value.trim()) return;
+        const email = input.value.trim();
+        const fakeUser = {
+          email: email,
+          name: email.split('@')[0],
+          picture: 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(email),
+          loginAt: new Date().toISOString()
+        };
+        localStorage.setItem('vatly12_user_profile', JSON.stringify(fakeUser));
+        if (window.GoogleSync) {
+          window.GoogleSync.init();
+          window.GoogleSync.updateUI();
+          window.GoogleSync.syncFromCloud().then(() => window.GoogleSync.syncToCloud());
+        }
+        showToast(`Đã lưu tài khoản: ${email}`);
+      };
+
+      if (btnSaveSheetWebhook) {
+        btnSaveSheetWebhook.addEventListener('click', () => {
+          nativeHaptic(15);
+          const val = sheetWebhookInput.value.trim();
+          if (val) {
+            localStorage.setItem('vatly12_sheet_webhook_url', val);
+            showToast('Đã lưu Webhook URL Google Sheets!');
+            if (window.GoogleSync) window.GoogleSync.syncToCloud();
+          } else {
+            localStorage.removeItem('vatly12_sheet_webhook_url');
+            showToast('Đã xóa Webhook URL.');
+          }
+        });
+      }
+
+      if (btnTestSheetWebhook) {
+        btnTestSheetWebhook.addEventListener('click', async () => {
+          nativeHaptic(15);
+          const val = sheetWebhookInput.value.trim() || localStorage.getItem('vatly12_sheet_webhook_url');
+          if (!val) {
+            sheetWebhookTestMsg.innerHTML = '<span style="color:var(--text-muted);">Chưa nhập Webhook URL.</span>';
+            return;
+          }
+          sheetWebhookTestMsg.innerHTML = '<span style="color:var(--primary);">⏳ Đang kết nối Google Sheets...</span>';
+          try {
+            const ctrl = new AbortController();
+            const tId = setTimeout(() => ctrl.abort(), 4000);
+            const pingUrl = `${val}${val.includes('?') ? '&' : '?'}action=ping`;
+            const res = await fetch(pingUrl, { signal: ctrl.signal });
+            clearTimeout(tId);
+            if (res.ok) {
+              const j = await res.json();
+              if (j.status === 'ok') {
+                sheetWebhookTestMsg.innerHTML = `<span style="color:#10b981; font-weight:700;">✓ Kết nối thành công tới Google Sheet: "${j.sheetName}"!</span>`;
+                return;
+              }
+            }
+          } catch(e) {}
+          sheetWebhookTestMsg.innerHTML = '<span style="color:#ef4444; font-weight:700;">✕ Chưa thể kết nối. Kiểm tra quyền "Bất kỳ ai (Anyone)".</span>';
+        });
+      }
+
+      // 13b. MODAL QUẢN LÝ CƠ SỞ DỮ LIỆU & CẤU HÌNH API
       window.openDbModal = function() {
         nativeHaptic(15);
         if (customApiInput) {
@@ -2000,6 +2185,9 @@
 
       // 14. KHỞI TẠO ỨNG DỤNG LẦN ĐẦU
       async function initApp() {
+        if (window.GoogleSync && window.GoogleSync.updateUI) {
+          window.GoogleSync.updateUI();
+        }
         await detectApi();
         await renderDefaultQuestions();
       }
