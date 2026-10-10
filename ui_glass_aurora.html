@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>UI Concept 6: Aurora Glass</title>
+  <style>
+    :root {
+      --bg: #030712;
+      --glass-surface: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --glass-hover: rgba(255, 255, 255, 0.09);
+      --text: #f9fafb;
+      --text-sub: #9ca3af;
+      --aurora-cyan: #06b6d4;
+      --aurora-violet: #8b5cf6;
+      --aurora-rose: #f43f5e;
+      --emerald: #10b981;
+      --emerald-glass: rgba(16, 185, 129, 0.15);
+      --rose-glass: rgba(244, 63, 94, 0.15);
+      --radius: 22px;
+      --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 100px;
+      position: relative;
+    }
+
+    /* DYNAMIC AURORA BLOBS */
+    .aurora-bg {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0.45;
+      animation: floatAurora 14s infinite alternate ease-in-out;
+    }
+    .blob-1 {
+      width: 380px; height: 380px;
+      background: var(--aurora-cyan);
+      top: -100px; left: -80px;
+    }
+    .blob-2 {
+      width: 420px; height: 420px;
+      background: var(--aurora-violet);
+      bottom: -100px; right: -80px;
+      animation-delay: -5s;
+    }
+    .blob-3 {
+      width: 300px; height: 300px;
+      background: var(--aurora-rose);
+      top: 40%; left: 30%;
+      animation-delay: -9s;
+    }
+
+    @keyframes floatAurora {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(60px, 40px) scale(1.15); }
+      100% { transform: translate(-40px, 80px) scale(0.95); }
+    }
+
+    /* APP SHELL */
+    .glass-shell {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 620px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* TOP GLASS BAR */
+    .glass-header {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid var(--glass-border);
+      border-radius: 18px;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .glass-badge {
+      font-size: 11px;
+      font-weight: 700;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      padding: 4px 10px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    /* GLASS CARD */
+    .glass-card {
+      background: var(--glass-surface);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 26px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+      transition: all 0.4s var(--ease);
+      animation: glassFadeIn 0.5s var(--ease) both;
+    }
+    @keyframes glassFadeIn {
+      from { opacity: 0; transform: translateY(16px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .q-badge-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .topic-chip {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .topic-chip::before {
+      content: "";
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #38bdf8;
+      box-shadow: 0 0 8px #38bdf8;
+    }
+
+    .glass-prompt {
+      font-size: 17.5px;
+      font-weight: 600;
+      line-height: 1.6;
+      color: #ffffff;
+      margin-bottom: 24px;
+      user-select: text;
+    }
+
+    /* OPTIONS */
+    .options-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+
+    .glass-opt {
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      color: #e2e8f0;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: all 0.25s var(--ease);
+      text-align: left;
+    }
+    .glass-opt:hover {
+      background: var(--glass-hover);
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+    }
+    .glass-opt:active {
+      transform: scale(0.98);
+    }
+
+    .opt-circle {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-sub);
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    /* STATES */
+    .glass-opt.correct {
+      background: var(--emerald-glass);
+      border-color: var(--emerald);
+      color: #34d399;
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+    }
+    .glass-opt.correct .opt-circle {
+      background: var(--emerald);
+      color: #000;
+      border-color: var(--emerald);
+    }
+
+    .glass-opt.wrong {
+      background: var(--rose-glass);
+      border-color: var(--aurora-rose);
+      color: #fb7185;
+      box-shadow: 0 0 20px rgba(244, 63, 94, 0.2);
+    }
+    .glass-opt.wrong .opt-circle {
+      background: var(--aurora-rose);
+      color: #fff;
+      border-color: var(--aurora-rose);
+    }
+
+    /* EXPLANATION */
+    .glass-exp {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 14px;
+      background: rgba(6, 182, 212, 0.06);
+      border: 1px solid rgba(6, 182, 212, 0.2);
+      display: none;
+      animation: glassFadeIn 0.35s var(--ease);
+    }
+    .glass-exp.show {
+      display: block;
+    }
+    .exp-label {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #22d3ee;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .exp-body {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #cbd5e1;
+    }
+
+    /* NAVIGATION */
+    .glass-nav-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.8), rgba(139, 92, 246, 0.8));
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 8px 25px rgba(6, 182, 212, 0.25);
+      transition: all 0.25s var(--ease);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .glass-nav-btn:hover {
+      box-shadow: 0 10px 30px rgba(6, 182, 212, 0.4);
+      transform: translateY(-2px);
+    }
+    .glass-nav-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* BOTTOM FLOATING DOCK */
+    .bottom-dock {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(30px);
+      border: 1px solid var(--glass-border);
+      padding: 8px 16px;
+      border-radius: 999px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      z-index: 100;
+      max-width: 90vw;
+      overflow-x: auto;
+    }
+    .dock-link {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-sub);
+      text-decoration: none;
+      white-space: nowrap;
+      transition: color 0.2s;
+    }
+    .dock-link:hover, .dock-link.active {
+      color: #38bdf8;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="aurora-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <div class="glass-shell">
+    
+    <header class="glass-header">
+      <div class="brand-group">
+        <span style="font-size:18px;">🔮</span>
+        <span style="font-weight:700; font-size:15px; letter-spacing:-0.2px;">AURORA GLASS</span>
+      </div>
+      <span class="glass-badge">UI 6 • SPATIAL</span>
+    </header>
+
+    <article class="glass-card" id="glassCard">
+      <div class="q-badge-row">
+        <div class="topic-chip" id="gTopic">Chương 1 • Vật Lí Nhiệt</div>
+        <span style="font-size:12px; color:var(--text-sub); font-weight:600;" id="gStep">01 / 03</span>
+      </div>
+
+      <h2 class="glass-prompt" id="gPrompt">
+        Nội năng của một vật là tổng hợp của những đại lượng nào cấu thành nên các phân tử của vật?
+      </h2>
+
+      <div class="options-stack" id="gOptions">
+        <button class="glass-opt" data-key="A">
+          <span class="opt-circle">A</span>
+          <span>Động năng và thế năng tương tác của các phân tử</span>
+        </button>
+        <button class="glass-opt" data-key="B">
+          <span class="opt-circle">B</span>
+          <span>Nhiệt lượng và công cơ học mà vật nhận được</span>
+        </button>
+        <button class="glass-opt" data-key="C">
+          <span class="opt-circle">C</span>
+          <span>Khối lượng và vận tốc chuyển động phân tử</span>
+        </button>
+        <button class="glass-opt" data-key="D">
+          <span class="opt-circle">D</span>
+          <span>Áp suất và thể tích khối chất</span>
+        </button>
+      </div>
+
+      <div class="glass-exp" id="gExp">
+        <div class="exp-label">✨ Giải thích sư phạm</div>
+        <div class="exp-body" id="gExpBody">
+          Định nghĩa SGK: Nội năng của một vật là tổng động năng chuyển động nhiệt của các phân tử cấu tạo nên vật và thế năng tương tác giữa chúng: U = E_đ + E_t. Chọn A.
+        </div>
+      </div>
+    </article>
+
+    <button class="glass-nav-btn" id="gNextBtn">
+      <span>Câu Tiếp Theo</span>
+      <span>➔</span>
+    </button>
+
+  </div>
+
+  <!-- BOTTOM DOCK -->
+  <nav class="bottom-dock">
+    <a href="ui_minimal_fluid.html" class="dock-link">1. Fluid</a>
+    <a href="ui_kinetic_linear.html" class="dock-link">2. Linear</a>
+    <a href="ui_focus_cards.html" class="dock-link">3. Focus</a>
+    <a href="ui_neobrutalism_pop.html" class="dock-link">5. Neo-Pop</a>
+    <a href="ui_glass_aurora.html" class="dock-link active">6. Aurora</a>
+    <a href="ui_bento_hub.html" class="dock-link">Hub</a>
+  </nav>
+
+  <script>
+    const questions = [
+      {
+        topic: "Chương 1 • Vật Lí Nhiệt",
+        prompt: "Nội năng của một vật là tổng hợp của những đại lượng nào cấu thành nên các phân tử của vật?",
+        opts: [
+          "Động năng và thế năng tương tác của các phân tử",
+          "Nhiệt lượng và công cơ học mà vật nhận được",
+          "Khối lượng và vận tốc chuyển động phân tử",
+          "Áp suất và thể tích khối chất"
+        ],
+        correct: "A",
+        exp: "Nội năng của một vật là tổng động năng chuyển động hỗn loạn không ngừng của các phân tử và thế năng tương tác giữa chúng. Chọn A."
+      },
+      {
+        topic: "Chương 2 • Khí Lí Tưởng",
+        prompt: "Nhiệt độ tuyệt đối T (Kelvin) liên hệ với nhiệt độ t (độ Celsius) theo công thức nào?",
+        opts: [
+          "T = t + 273,15",
+          "T = t - 273,15",
+          "T = 273,15 - t",
+          "T = (t + 32) · 1,8"
+        ],
+        correct: "A",
+        exp: "Nhiệt độ trong thang Kelvin (T) liên hệ với thang Celsius (t) qua công thức T = t + 273,15 K. Điểm 0 K gọi là độ không tuyệt đối."
+      },
+      {
+        topic: "Chương 4 • Vật Lí Hạt Nhân",
+        prompt: "Hiện tượng một hạt nhân nặng tự vỡ thành hai mảnh nhẹ hơn kèm theo giải phóng một số neutron gọi là gì?",
+        opts: [
+          "Phản ứng phân hạch",
+          "Phản ứng nhiệt hạch",
+          "Hiện tượng phóng xạ tự nhiên",
+          "Hiện tượng quang điện"
+        ],
+        correct: "A",
+        exp: "Phản ứng phân hạch là quá trình một hạt nhân rất nặng (như U-235, Pu-239) hấp thụ một neutron chậm rồi vỡ thành 2 mảnh trung bình và phát ra từ 2 đến 3 neutron mới kèm năng lượng khổng lồ. Chọn A."
+      }
+    ];
+
+    let currentIdx = 0;
+    const gTopic = document.getElementById('gTopic');
+    const gStep = document.getElementById('gStep');
+    const gPrompt = document.getElementById('gPrompt');
+    const gOptions = document.getElementById('gOptions');
+    const gExp = document.getElementById('gExp');
+    const gExpBody = document.getElementById('gExpBody');
+    const gCard = document.getElementById('glassCard');
+    const gNextBtn = document.getElementById('gNextBtn');
+
+    function renderQuestion(idx) {
+      const q = questions[idx];
+      gTopic.textContent = q.topic;
+      gStep.textContent = `0${idx + 1} / 0${questions.length}`;
+      gPrompt.textContent = q.prompt;
+      gExpBody.textContent = q.exp;
+      gExp.classList.remove('show');
+
+      const keys = ['A', 'B', 'C', 'D'];
+      gOptions.innerHTML = '';
+      q.opts.forEach((text, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'glass-opt';
+        btn.dataset.key = keys[i];
+        btn.innerHTML = `<span class="opt-circle">${keys[i]}</span><span>${text}</span>`;
+        btn.addEventListener('click', () => {
+          const all = gOptions.querySelectorAll('.glass-opt');
+          all.forEach(b => b.classList.remove('correct', 'wrong'));
+          if (keys[i] === q.correct) {
+            btn.classList.add('correct');
+          } else {
+            btn.classList.add('wrong');
+            const right = gOptions.querySelector(`[data-key="${q.correct}"]`);
+            if (right) right.classList.add('correct');
+          }
+          gExp.classList.add('show');
+        });
+        gOptions.appendChild(btn);
+      });
+    }
+
+    gNextBtn.addEventListener('click', () => {
+      gCard.style.animation = 'none';
+      void gCard.offsetWidth;
+      gCard.style.animation = 'glassFadeIn 0.4s var(--ease) both';
+
+      currentIdx = (currentIdx + 1) % questions.length;
+      renderQuestion(currentIdx);
+    });
+
+    renderQuestion(0);
+  </script>
+</body>
+</html>

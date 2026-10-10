@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>UI Concept 3: Focus 3D Cards</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-front: #1e293b;
+      --card-back: #1e2638;
+      --border: rgba(255, 255, 255, 0.1);
+      --text: #f8fafc;
+      --text-sub: #94a3b8;
+      --accent: #f59e0b;
+      --accent-glow: rgba(245, 158, 11, 0.25);
+      --success: #10b981;
+      --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 15%, #1e293b 0%, var(--bg) 70%);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: 90px;
+    }
+
+    /* TOP ZEN BAR */
+    .zen-bar {
+      width: 100%;
+      max-width: 580px;
+      padding: 20px 20px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .streak-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      padding: 6px 12px;
+      border-radius: 999px;
+      animation: streakPulse 2s infinite ease-in-out;
+    }
+    @keyframes streakPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .flip-hint {
+      font-size: 11px;
+      color: var(--text-sub);
+      background: rgba(255, 255, 255, 0.06);
+      padding: 4px 10px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* 3D PERSPECTIVE CONTAINER */
+    .card-scene {
+      width: 100%;
+      max-width: 500px;
+      height: 480px;
+      perspective: 1200px;
+      margin: 15px auto;
+      padding: 0 16px;
+    }
+
+    .f-card {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.65s var(--ease);
+      border-radius: 24px;
+    }
+
+    .f-card.flipped {
+      transform: rotateY(180deg);
+    }
+
+    /* CARD FACES */
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 24px;
+      padding: 26px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    .card-front {
+      background: var(--card-front);
+    }
+
+    .card-back {
+      background: var(--card-back);
+      transform: rotateY(180deg);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    /* FRONT CONTENT */
+    .cf-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .cf-pill {
+      font-size: 11px;
+      font-weight: 700;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.15);
+      padding: 4px 10px;
+      border-radius: 8px;
+    }
+    .cf-question {
+      font-size: 16.5px;
+      font-weight: 600;
+      line-height: 1.6;
+      color: #fff;
+      user-select: text;
+    }
+
+    .cf-options {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      margin: 16px 0;
+    }
+
+    .opt-card-btn {
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      color: var(--text-sub);
+      font-size: 14px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s var(--spring);
+    }
+    .opt-card-btn:active {
+      transform: scale(0.96);
+    }
+    .opt-card-btn.right {
+      background: rgba(16, 185, 129, 0.18);
+      border-color: var(--success);
+      color: #34d399;
+      transform: scale(1.02);
+    }
+    .opt-card-btn.wrong {
+      background: rgba(239, 68, 68, 0.18);
+      border-color: #ef4444;
+      color: #f87171;
+    }
+
+    /* BACK CONTENT */
+    .cb-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cb-content {
+      font-size: 14.5px;
+      line-height: 1.7;
+      color: #cbd5e1;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
+    /* CARD ACTION CONTROLS */
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .flip-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      color: #fff;
+      font-weight: 600;
+      font-size: 13.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .flip-btn:active {
+      transform: scale(0.95);
+    }
+
+    .next-card-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--accent);
+      color: #000;
+      font-weight: 700;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 15px var(--accent-glow);
+      transition: all 0.25s var(--spring);
+    }
+    .next-card-btn:active {
+      transform: scale(0.9);
+    }
+
+    /* BOTTOM FLOATING DOCK */
+    .bottom-dock {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(30, 41, 59, 0.85);
+      backdrop-filter: blur(25px);
+      border: 1px solid var(--border);
+      padding: 8px 18px;
+      border-radius: 999px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      z-index: 100;
+    }
+    .dock-link {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-sub);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .dock-link:hover, .dock-link.active {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ZEN TOP BAR -->
+  <div class="zen-bar">
+    <div class="streak-badge">
+      <span>🔥</span>
+      <span id="streakCount">Streak 5 Ngày</span>
+    </div>
+    <div class="flip-hint">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      Chạm để Lật Mặt Sau
+    </div>
+  </div>
+
+  <!-- 3D CARD SCENE -->
+  <div class="card-scene">
+    <div class="f-card" id="focusCard">
+      
+      <!-- FRONT FACE -->
+      <div class="card-face card-front">
+        <div>
+          <div class="cf-header">
+            <span class="cf-pill" id="cardTopic">Chương 1 • Vật Lí Nhiệt</span>
+            <span style="font-size:12px; color:var(--text-sub); font-weight:600;" id="cardNum">01 / 03</span>
+          </div>
+          <p class="cf-question" id="cardQuestion">
+            Nhiệt nóng chảy riêng của một chất là nhiệt lượng cần thiết để làm nóng chảy hoàn toàn bao nhiêu kilôgam chất đó ở nhiệt độ nóng chảy?
+          </p>
+          <div class="cf-options" id="optionsBox">
+            <button class="opt-card-btn" data-choice="A"><b>A.</b> 1 kg</button>
+            <button class="opt-card-btn" data-choice="B"><b>B.</b> 10 kg</button>
+            <button class="opt-card-btn" data-choice="C"><b>C.</b> 0,1 kg</button>
+            <button class="opt-card-btn" data-choice="D"><b>D.</b> 100 kg</button>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <button class="flip-btn" id="flipTrigger">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Lật Xem Lời Giải
+          </button>
+          <button class="next-card-btn" id="nextCardTrigger" title="Câu tiếp theo">➔</button>
+        </div>
+      </div>
+
+      <!-- BACK FACE -->
+      <div class="card-face card-back">
+        <div>
+          <div class="cb-title">
+            <span>💡</span>
+            <span>Lời Giải Sư Phạm</span>
+          </div>
+          <div class="cb-content" id="cardSolution">
+            <p><strong>Đáp án chính xác: A</strong></p>
+            <br>
+            <p><strong>Cơ sở lý thuyết SGK KNTT:</strong></p>
+            <p>Nhiệt nóng chảy riêng (kí hiệu là λ) của một chất là nhiệt lượng cần cung cấp cho <strong>1 kg</strong> chất đó chuyển hoàn toàn từ thể rắn sang thể lỏng ở nhiệt độ nóng chảy.</p>
+            <br>
+            <p style="font-family:monospace; color:var(--accent);">Công thức: Q = λ · m  ⟺  λ = Q / m  [J/kg]</p>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <button class="flip-btn" id="unflipTrigger">
+            ➔ Quay lại Câu hỏi
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BOTTOM DOCK -->
+  <nav class="bottom-dock">
+    <a href="ui_minimal_fluid.html" class="dock-link">1. Fluid</a>
+    <a href="ui_kinetic_linear.html" class="dock-link">2. Linear</a>
+    <a href="ui_focus_cards.html" class="dock-link active">3. Focus</a>
+    <a href="ui_bento_hub.html" class="dock-link">4. Bento</a>
+  </nav>
+
+  <script>
+    const focusCard = document.getElementById('focusCard');
+    const flipBtn = document.getElementById('flipTrigger');
+    const unflipBtn = document.getElementById('unflipTrigger');
+    const nextBtn = document.getElementById('nextCardTrigger');
+
+    // Flip Toggle
+    function toggleFlip() {
+      focusCard.classList.toggle('flipped');
+    }
+    flipBtn.addEventListener('click', toggleFlip);
+    unflipBtn.addEventListener('click', toggleFlip);
+
+    // Question Dataset (Zero-API Standalone)
+    const dataset = [
+      {
+        topic: "Chương 1 • Vật Lí Nhiệt",
+        num: "01 / 03",
+        q: "Nhiệt nóng chảy riêng của một chất là nhiệt lượng cần thiết để làm nóng chảy hoàn toàn bao nhiêu kilôgam chất đó ở nhiệt độ nóng chảy?",
+        opts: ["1 kg", "10 kg", "0,1 kg", "100 kg"],
+        correct: 0,
+        sol: "<strong>Đáp án chính xác: A (1 kg)</strong><br><br>Định nghĩa SGK: Nhiệt nóng chảy riêng λ là nhiệt lượng cần truyền cho 1 kg chất rắn để nóng chảy hoàn toàn ở nhiệt độ nóng chảy: Q = λ·m."
+      },
+      {
+        topic: "Chương 3 • Từ Trường",
+        num: "02 / 03",
+        q: "Lực từ tác dụng lên một đoạn dây dẫn mang dòng điện đặt trong từ trường đều có phương như thế nào?",
+        opts: ["Song song với đường sức từ", "Vuông góc với cả đoạn dây và đường sức từ", "Cùng hướng với dòng điện", "Ngược hướng với dòng điện"],
+        correct: 1,
+        sol: "<strong>Đáp án chính xác: B</strong><br><br>Theo quy tắc bàn tay trái, véctơ lực từ F vuông góc với mặt phẳng chứa đoạn dòng điện I·L và véctơ cảm ứng từ B."
+      },
+      {
+        topic: "Chương 4 • Vật Lí Hạt Nhân",
+        num: "03 / 03",
+        q: "Hạt nhân nguyên tử cấu tạo gồm những hạt nào?",
+        opts: ["Chỉ có proton", "Chỉ có neutron", "Proton và neutron (gọi chung là nucleon)", "Proton và electron"],
+        correct: 2,
+        sol: "<strong>Đáp án chính xác: C</strong><br><br>Hạt nhân được cấu tạo từ các nucleon, gồm hai loại hạt là proton (mang điện tích +e) và neutron (không mang điện)."
+      }
+    ];
+
+    let currentQ = 0;
+
+    function renderCard(idx) {
+      const item = dataset[idx];
+      document.getElementById('cardTopic').textContent = item.topic;
+      document.getElementById('cardNum').textContent = item.num;
+      document.getElementById('cardQuestion').textContent = item.q;
+      document.getElementById('cardSolution').innerHTML = item.sol;
+
+      const letters = ['A', 'B', 'C', 'D'];
+      const optBtns = document.querySelectorAll('.opt-card-btn');
+      optBtns.forEach((btn, i) => {
+        btn.innerHTML = `<b>${letters[i]}.</b> ${item.opts[i]}`;
+        btn.className = 'opt-card-btn';
+      });
+
+      focusCard.classList.remove('flipped');
+    }
+
+    // Next Card with spring animation
+    nextBtn.addEventListener('click', () => {
+      focusCard.style.transform = 'scale(0.9) translateY(20px)';
+      setTimeout(() => {
+        currentQ = (currentQ + 1) % dataset.length;
+        renderCard(currentQ);
+        focusCard.style.transform = '';
+      }, 250);
+    });
+
+    // Check Choice
+    document.querySelectorAll('.opt-card-btn').forEach((btn, idx) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const correctIdx = dataset[currentQ].correct;
+        if (idx === correctIdx) {
+          btn.classList.add('right');
+        } else {
+          btn.classList.add('wrong');
+          document.querySelectorAll('.opt-card-btn')[correctIdx].classList.add('right');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

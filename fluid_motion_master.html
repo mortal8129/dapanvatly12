@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Vật Lí 12 • Fluid Motion Master</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-glass: rgba(255, 255, 255, 0.85);
+      --border: rgba(226, 232, 240, 0.85);
+      --border-subtle: rgba(226, 232, 240, 0.5);
+      --text: #0f172a;
+      --text-sub: #475569;
+      --text-muted: #94a3b8;
+      --accent: #2563eb;
+      --accent-soft: #eff6ff;
+      --accent-glow: rgba(37, 99, 235, 0.2);
+      --success: #10b981;
+      --success-soft: #ecfdf5;
+      --danger: #ef4444;
+      --danger-soft: #fef2f2;
+      --amber: #f59e0b;
+      --amber-soft: #fffbeb;
+      --radius-sm: 10px;
+      --radius-md: 18px;
+      --radius-lg: 26px;
+      --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
+      --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.07);
+      --shadow-lg: 0 16px 40px rgba(37, 99, 235, 0.12);
+      
+      /* FLUID MOTION SPRING PHYSICS */
+      --fluid-ease: cubic-bezier(0.16, 1, 0.3, 1);
+      --fluid-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --fluid-liquid: cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    [data-theme="dark"] {
+      --bg: #090d16;
+      --surface: #131b2e;
+      --surface-glass: rgba(19, 27, 46, 0.85);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-subtle: rgba(255, 255, 255, 0.04);
+      --text: #f8fafc;
+      --text-sub: #94a3b8;
+      --text-muted: #64748b;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.12);
+      --accent-glow: rgba(56, 189, 248, 0.25);
+      --success: #34d399;
+      --success-soft: rgba(16, 185, 129, 0.12);
+      --danger: #f87171;
+      --danger-soft: rgba(239, 68, 68, 0.12);
+      --amber: #fbbf24;
+      --amber-soft: rgba(251, 191, 36, 0.12);
+      --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.25);
+      --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.45);
+      --shadow-lg: 0 16px 45px rgba(0, 0, 0, 0.6);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background-color 0.45s var(--fluid-ease), color 0.45s var(--fluid-ease);
+      padding-bottom: 96px;
+    }
+
+    /* TOP STICKY HEADER WITH BLUR */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      background: var(--surface-glass);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.3s var(--fluid-ease);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), #6366f1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 16px;
+      box-shadow: 0 4px 14px var(--accent-glow);
+      transition: transform 0.35s var(--fluid-bounce);
+    }
+    .brand:hover .brand-avatar {
+      transform: scale(1.08) rotate(3deg);
+    }
+
+    .brand-meta h1 {
+      font-size: 16px;
+      font-weight: 750;
+      letter-spacing: -0.3px;
+    }
+    .brand-meta p {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      outline: none;
+      transition: transform 0.2s var(--fluid-bounce), background 0.2s;
+    }
+    .btn-icon:active {
+      transform: scale(0.9);
+    }
+
+    /* FLUID PILL SLIDER TABS */
+    .nav-tabs-wrapper {
+      max-width: 680px;
+      margin: 16px auto 10px;
+      padding: 0 16px;
+    }
+
+    .fluid-tab-track {
+      position: relative;
+      display: flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .fluid-pill-slider {
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      left: 4px;
+      width: calc(25% - 4px);
+      background: var(--accent);
+      border-radius: 999px;
+      box-shadow: 0 4px 14px var(--accent-glow);
+      pointer-events: none;
+      transition: transform 0.38s var(--fluid-ease), width 0.3s var(--fluid-ease);
+    }
+
+    .tab-btn {
+      flex: 1;
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 10px 0;
+      font-size: 13.5px;
+      font-weight: 650;
+      color: var(--text-sub);
+      cursor: pointer;
+      border-radius: 999px;
+      transition: color 0.25s ease;
+      white-space: nowrap;
+    }
+    .tab-btn.active {
+      color: #ffffff;
+    }
+
+    /* MAIN STAGE & PANEL TRANSITIONS */
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 10px 16px;
+      position: relative;
+    }
+
+    .tab-panel {
+      display: none;
+      opacity: 0;
+      transform: translateY(18px) scale(0.985);
+      transition: opacity 0.36s var(--fluid-ease), transform 0.36s var(--fluid-ease);
+    }
+    .tab-panel.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    /* FLUID FILTER CHIPS (HORIZONTAL SCROLLING PILLS) */
+    .filter-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 0 14px;
+      scrollbar-width: none;
+    }
+    .filter-scroll::-webkit-scrollbar { display: none; }
+
+    .filter-pill {
+      flex-shrink: 0;
+      padding: 7px 16px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 600;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-sub);
+      cursor: pointer;
+      transition: all 0.25s var(--fluid-bounce);
+    }
+    .filter-pill:active { transform: scale(0.93); }
+    .filter-pill.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 2px 10px var(--accent-glow);
+    }
+
+    /* FLUID CARDS STAGGERED REVEAL */
+    .card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .fluid-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s var(--fluid-ease), box-shadow 0.3s var(--fluid-ease), border-color 0.3s;
+      animation: fluidCardIn 0.45s var(--fluid-ease) both;
+      animation-delay: calc(var(--delay, 0) * 0.05s);
+      user-select: text;
+    }
+    .fluid-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--accent-glow);
+    }
+
+    @keyframes fluidCardIn {
+      from {
+        opacity: 0;
+        transform: translateY(24px) scale(0.97);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .card-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .badge-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .card-index {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 650;
+      line-height: 1.55;
+      color: var(--text);
+      margin-bottom: 14px;
+    }
+
+    /* INTERACTIVE CHOICES WITH LIQUID RIPPLE WAVE */
+    .options-group {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      user-select: none;
+    }
+
+    .opt-liquid-btn {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      color: var(--text-sub);
+      cursor: pointer;
+      text-align: left;
+      font-size: 14px;
+      line-height: 1.45;
+      font-weight: 500;
+      overflow: hidden;
+      transition: all 0.22s var(--fluid-ease);
+    }
+    .opt-liquid-btn:active {
+      transform: scale(0.98);
+    }
+
+    .opt-badge {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    /* RIPPLE EFFECT */
+    .liquid-wave {
+      position: absolute;
+      border-radius: 50%;
+      transform: scale(0);
+      animation: rippleSpread 0.6s linear;
+      background-color: rgba(37, 99, 235, 0.25);
+      pointer-events: none;
+    }
+    @keyframes rippleSpread {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+
+    /* SELECTION RESULTS */
+    .opt-liquid-btn.correct {
+      border-color: var(--success);
+      background: var(--success-soft);
+      color: var(--success);
+      animation: fluidBouncePop 0.35s var(--fluid-bounce);
+    }
+    .opt-liquid-btn.correct .opt-badge {
+      background: var(--success);
+      color: #fff;
+      border-color: var(--success);
+    }
+
+    .opt-liquid-btn.wrong {
+      border-color: var(--danger);
+      background: var(--danger-soft);
+      color: var(--danger);
+      animation: fluidWiggle 0.35s ease;
+    }
+    .opt-liquid-btn.wrong .opt-badge {
+      background: var(--danger);
+      color: #fff;
+      border-color: var(--danger);
+    }
+
+    @keyframes fluidBouncePop {
+      0% { transform: scale(0.96); }
+      50% { transform: scale(1.025); }
+      100% { transform: scale(1); }
+    }
+    @keyframes fluidWiggle {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
+    }
+
+    /* SMOOTH CSS GRID ACCORDION (ZERO-LAG EXPLANATION) */
+    .accordion-toggle {
+      margin-top: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 650;
+      color: var(--accent);
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 4px 0;
+    }
+    .accordion-toggle svg {
+      transition: transform 0.32s var(--fluid-ease);
+    }
+    .accordion-toggle.open svg {
+      transform: rotate(180deg);
+    }
+
+    .accordion-body {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.35s var(--fluid-ease), margin 0.3s;
+    }
+    .accordion-body.open {
+      grid-template-rows: 1fr;
+      margin-top: 10px;
+    }
+    .accordion-inner {
+      overflow: hidden;
+    }
+    .exp-callout {
+      background: var(--accent-soft);
+      border-left: 3.5px solid var(--accent);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 12px 14px;
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: var(--text-sub);
+    }
+
+    /* EXAM & TIMED MODE WITH FLUID TIMELINE */
+    .exam-hero {
+      background: linear-gradient(135deg, var(--surface), var(--accent-soft));
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-sm);
+      text-align: center;
+    }
+    .fluid-progress-track {
+      width: 100%;
+      height: 8px;
+      background: var(--border);
+      border-radius: 999px;
+      margin: 16px 0 10px;
+      overflow: hidden;
+    }
+    .fluid-progress-fill {
+      height: 100%;
+      width: 35%;
+      background: linear-gradient(90deg, var(--accent), var(--success));
+      border-radius: 999px;
+      transition: width 0.4s var(--fluid-ease);
+    }
+
+    /* FLUID ACTION BUTTON */
+    .btn-fluid-cta {
+      width: 100%;
+      padding: 14px;
+      border-radius: var(--radius-md);
+      background: var(--accent);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 6px 18px var(--accent-glow);
+      transition: all 0.25s var(--fluid-bounce);
+    }
+    .btn-fluid-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px var(--accent-glow);
+    }
+    .btn-fluid-cta:active {
+      transform: scale(0.96);
+    }
+
+    /* STATS MASTERY CARD */
+    .stat-circle-group {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .stat-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 12px;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .stat-val {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 2px;
+    }
+    .stat-lbl {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    /* BOTTOM FLOATING DOCK */
+    .bottom-dock {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface-glass);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid var(--border);
+      padding: 8px 18px;
+      border-radius: 999px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      z-index: 100;
+    }
+    .dock-link {
+      font-size: 12.5px;
+      font-weight: 650;
+      color: var(--text-sub);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .dock-link:hover, .dock-link.active {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-avatar">FL</div>
+      <div class="brand-meta">
+        <h1>Vật Lí 12 • Fluid Motion</h1>
+        <p>Bản Thiết Kế Master • Chuẩn GDPT 2018</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-icon" id="themeToggle" title="Chuyển chế độ Sáng / Tối">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- FLUID TAB SLIDER -->
+  <div class="nav-tabs-wrapper">
+    <div class="fluid-tab-track">
+      <div class="fluid-pill-slider" id="pillSlider"></div>
+      <div class="tab-btn active" data-index="0" data-panel="theory">Lý Thuyết</div>
+      <div class="tab-btn" data-index="1" data-panel="bank">Ngân Hàng</div>
+      <div class="tab-btn" data-index="2" data-panel="exam">Luyện Đề</div>
+      <div class="tab-btn" data-index="3" data-panel="stats">Năng Lực</div>
+    </div>
+  </div>
+
+  <!-- CONTAINER -->
+  <main class="container">
+
+    <!-- PANEL 1: LÝ THUYẾT CỐT LÕI -->
+    <section class="tab-panel active" id="panel-theory">
+      <div class="filter-scroll">
+        <div class="filter-pill active" onclick="filterChapter(1)">Chương 1: Vật Lí Nhiệt</div>
+        <div class="filter-pill" onclick="filterChapter(2)">Chương 2: Khí Lí Tưởng</div>
+        <div class="filter-pill" onclick="filterChapter(3)">Chương 3: Từ Trường</div>
+        <div class="filter-pill" onclick="filterChapter(4)">Chương 4: Hạt Nhân</div>
+      </div>
+
+      <div class="card-list">
+        <!-- Theory 1 -->
+        <article class="fluid-card" style="--delay: 1">
+          <div class="card-meta-row">
+            <span class="badge-pill">SGK KNTT • BÀI 4</span>
+            <span class="card-index">Định Luật Cốt Lõi</span>
+          </div>
+          <h2 class="card-title">Nhiệt Dung Riêng (c) của các chất</h2>
+          <p style="font-size:14px; line-height:1.6; color:var(--text-sub); margin-bottom:12px;">
+            Nhiệt dung riêng của một chất là nhiệt lượng cần cung cấp cho 1 kg chất đó để làm cho nhiệt độ của nó tăng thêm 1 K (hoặc 1°C).
+          </p>
+          <div style="background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 14px; font-family:monospace; font-weight:700; color:var(--accent);">
+            Q = m · c · ΔT  ⟺  c = Q / (m · ΔT)  [J/(kg·K)]
+          </div>
+        </article>
+
+        <!-- Theory 2 -->
+        <article class="fluid-card" style="--delay: 2">
+          <div class="card-meta-row">
+            <span class="badge-pill" style="background:var(--amber-soft); color:var(--amber);">ỨNG DỤNG ĐỜI SỐNG</span>
+            <span class="card-index">Hiện Tượng Tự Nhiên</span>
+          </div>
+          <h2 class="card-title">Đặc tính dị biệt của nước & Điều hòa khí hậu</h2>
+          <p style="font-size:14px; line-height:1.6; color:var(--text-sub);">
+            Nước có nhiệt dung riêng rất lớn (c ≈ 4180 J/(kg·K)), gấp gần 5 lần nhôm và 10 lần đồng. Do đó, ban ngày nước biển hấp thụ lượng nhiệt lớn mà nhiệt độ tăng rất ít; ban đêm tỏa nhiệt chậm giúp các vùng duyên hải có biên độ nhiệt độ ngày - đêm rất ôn hòa.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- PANEL 2: NGÂN HÀNG CÂU HỎI TRẮC NGHIỆM TƯƠNG TÁC -->
+    <section class="tab-panel" id="panel-bank">
+      <div class="card-list" id="questionsContainer">
+        
+        <!-- Question 1 -->
+        <article class="fluid-card" style="--delay: 1">
+          <div class="card-meta-row">
+            <span class="badge-pill">VẬT LÍ NHIỆT</span>
+            <span class="card-index">Câu 01 • Trắc nghiệm 4 lựa chọn</span>
+          </div>
+          <p class="card-title">Nhiệt lượng cần cung cấp để đun nóng 2 kg nước từ 25°C lên 85°C là bao nhiêu? Biết c_nước = 4180 J/(kg·K).</p>
+          <div class="options-group" data-correct="C">
+            <button class="opt-liquid-btn" data-opt="A">
+              <span class="opt-badge">A</span>
+              <span>250,8 kJ</span>
+            </button>
+            <button class="opt-liquid-btn" data-opt="B">
+              <span class="opt-badge">B</span>
+              <span>418,0 kJ</span>
+            </button>
+            <button class="opt-liquid-btn" data-opt="C">
+              <span class="opt-badge">C</span>
+              <span>501,6 kJ</span>
+            </button>
+            <button class="opt-liquid-btn" data-opt="D">
+              <span class="opt-badge">D</span>
+              <span>710,6 kJ</span>
+            </button>
+          </div>
+          <button class="accordion-toggle">
+            <span>Xem lời giải chi tiết sư phạm</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <div class="accordion-body">
+            <div class="accordion-inner">
+              <div class="exp-callout">
+                <strong>Phương pháp giải:</strong> Độ biến thiên nhiệt độ: Δt = 85 - 25 = 60°C = 60 K.<br>
+                Nhiệt lượng: Q = m · c · Δt = 2 · 4180 · 60 = 501.600 J = <strong>501,6 kJ</strong>. Chọn C.
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Question 2 -->
+        <article class="fluid-card" style="--delay: 2">
+          <div class="card-meta-row">
+            <span class="badge-pill">KHÍ LÍ TƯỞNG</span>
+            <span class="card-index">Câu 02 • Quá trình đẳng áp</span>
+          </div>
+          <p class="card-title">Theo định luật Charles, trong quá trình đẳng áp của một lượng khí lí tưởng xác định, thể tích V tỉ lệ thuận với đại lượng nào?</p>
+          <div class="options-group" data-correct="A">
+            <button class="opt-liquid-btn" data-opt="A">
+              <span class="opt-badge">A</span>
+              <span>Nhiệt độ tuyệt đối T (Kelvin)</span>
+            </button>
+            <button class="opt-liquid-btn" data-opt="B">
+              <span class="opt-badge">B</span>
+              <span>Nhiệt độ Celsius t (°C)</span>
+            </button>
+            <button class="opt-liquid-btn" data-opt="C">
+              <span class="opt-badge">C</span>
+              <span>Khối lượng riêng của khối khí</span>
+            </button>
+            <button class="opt-liquid-btn" data-opt="D">
+              <span class="opt-badge">D</span>
+              <span>Áp suất chất khí p</span>
+            </button>
+          </div>
+          <button class="accordion-toggle">
+            <span>Xem lời giải chi tiết sư phạm</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <div class="accordion-body">
+            <div class="accordion-inner">
+              <div class="exp-callout">
+                <strong>Phương pháp giải:</strong> Định luật Charles nêu rõ: Khi áp suất không đổi, thể tích V của một lượng khí xác định tỉ lệ thuận với nhiệt độ tuyệt đối T: V / T = hằng số. Chọn A.
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Question 3 -->
+        <article class="fluid-card" style="--delay: 3">
+          <div class="card-meta-row">
+            <span class="badge-pill">VẬT LÍ HẠT NHÂN</span>
+            <span class="card-index">Câu 03 • Năng lượng liên kết</span>
+          </div>
+          <p class="card-title">Đại lượng nào sau đây quyết định tính bền vững của một hạt nhân nguyên tử?</p>
+          <div class="options-group" data-correct="D">
+            <button class="opt-liquid-btn" data-opt="A">
+              <span class="opt-badge">A</span>
+              <span>Năng lượng liên kết toàn phần</span>
+            </button>
+            <button class="opt-liquid-btn" data-opt="B">
+              <span class="opt-badge">B</span>
+              <span>Độ hụt khối Δm</span>
+            </button>
+            <button class="opt-liquid-btn" data-opt="C">
+              <span class="opt-badge">C</span>
+              <span>Số khối A lớn nhất</span>
+            </button>
+            <button class="opt-liquid-btn" data-opt="D">
+              <span class="opt-badge">D</span>
+              <span>Năng lượng liên kết riêng (W_lk / A)</span>
+            </button>
+          </div>
+          <button class="accordion-toggle">
+            <span>Xem lời giải chi tiết sư phạm</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <div class="accordion-body">
+            <div class="accordion-inner">
+              <div class="exp-callout">
+                <strong>Phương pháp giải:</strong> Hạt nhân càng bền vững khi năng lượng liên kết riêng (năng lượng liên kết tính trên một nucleon) càng lớn. Các hạt nhân có số khối 50 < A < 70 là bền vững nhất trong tự nhiên. Chọn D.
+              </div>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- PANEL 3: LUYỆN ĐỀ THI NHANH -->
+    <section class="tab-panel" id="panel-exam">
+      <div class="exam-hero">
+        <h2 style="font-size: 20px; font-weight:800; margin-bottom: 6px;">Mô Phỏng Thi Tốt Nghiệp THPT 2025</h2>
+        <p style="font-size:13.5px; color:var(--text-sub);">Đề thi 28 câu chuẩn ma trận Bộ GD&ĐT (18 Trắc nghiệm + 4 Đúng/Sai + 6 Trả lời ngắn)</p>
+        
+        <div class="fluid-progress-track">
+          <div class="fluid-progress-fill" id="examBar" style="width: 25%;"></div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; font-size:12.5px; color:var(--text-muted); font-weight:600;">
+          <span>Tiến độ: 07 / 28 câu</span>
+          <span>Thời gian còn: 38:45</span>
+        </div>
+      </div>
+
+      <button class="btn-fluid-cta" onclick="alert('Fluid Motion: Đã khởi tạo bài thi mới với hiệu ứng chuyển cảnh mượt mà!')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 3l14 9-14 9V3z"/></svg>
+        Bắt Đầu Lượt Làm Bài Mới
+      </button>
+    </section>
+
+    <!-- PANEL 4: THỐNG KÊ NĂNG LỰC -->
+    <section class="tab-panel" id="panel-stats">
+      <div class="stat-circle-group">
+        <div class="stat-box">
+          <div class="stat-val">3.224</div>
+          <div class="stat-lbl">Tổng Số Câu</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" style="color:var(--success);">94%</div>
+          <div class="stat-lbl">Tỉ Lệ Đúng</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" style="color:var(--amber);">18</div>
+          <div class="stat-lbl">Đề Hoàn Tất</div>
+        </div>
+      </div>
+
+      <article class="fluid-card">
+        <div class="card-meta-row">
+          <span class="badge-pill">MA TRẬN NĂNG LỰC</span>
+          <span class="card-index">4 Chương GDPT 2018</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px; margin-top:8px;">
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600; margin-bottom:4px;">
+              <span>Chương 1: Vật lí nhiệt</span>
+              <span style="color:var(--accent);">96%</span>
+            </div>
+            <div style="width:100%; height:6px; background:var(--border); border-radius:999px; overflow:hidden;">
+              <div style="width:96%; height:100%; background:var(--accent); border-radius:999px;"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600; margin-bottom:4px;">
+              <span>Chương 2: Khí lí tưởng</span>
+              <span style="color:var(--success);">88%</span>
+            </div>
+            <div style="width:100%; height:6px; background:var(--border); border-radius:999px; overflow:hidden;">
+              <div style="width:88%; height:100%; background:var(--success); border-radius:999px;"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600; margin-bottom:4px;">
+              <span>Chương 3: Từ trường</span>
+              <span style="color:var(--amber);">92%</span>
+            </div>
+            <div style="width:100%; height:6px; background:var(--border); border-radius:999px; overflow:hidden;">
+              <div style="width:92%; height:100%; background:var(--amber); border-radius:999px;"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600; margin-bottom:4px;">
+              <span>Chương 4: Vật lí hạt nhân</span>
+              <span style="color:#a855f7;">90%</span>
+            </div>
+            <div style="width:100%; height:6px; background:var(--border); border-radius:999px; overflow:hidden;">
+              <div style="width:90%; height:100%; background:#a855f7; border-radius:999px;"></div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+  </main>
+
+  <!-- FLOATING DOCK -->
+  <nav class="bottom-dock">
+    <a href="fluid_motion_master.html" class="dock-link active">★ Fluid Master</a>
+    <a href="ui_minimal_fluid.html" class="dock-link">Fluid 1</a>
+    <a href="ui_kinetic_linear.html" class="dock-link">Linear</a>
+    <a href="ui_focus_cards.html" class="dock-link">Focus</a>
+    <a href="ui_neobrutalism_pop.html" class="dock-link">Neo-Pop</a>
+    <a href="ui_bento_hub.html" class="dock-link">Hub</a>
+  </nav>
+
+  <script>
+    // 1. FLUID PILL SLIDER WITH LIQUID SQUASH & STRETCH
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const pill = document.getElementById('pillSlider');
+    const panels = document.querySelectorAll('.tab-panel');
+
+    tabBtns.forEach((tab, index) => {
+      tab.addEventListener('click', () => {
+        tabBtns.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        // Liquid movement with slight scale stretch
+        pill.style.transform = `translateX(${index * 100}%) scaleX(1.08)`;
+        setTimeout(() => {
+          pill.style.transform = `translateX(${index * 100}%) scaleX(1)`;
+        }, 180);
+
+        // Crossfade panel transition
+        const targetPanel = tab.dataset.panel;
+        panels.forEach(p => {
+          p.classList.remove('active');
+          if (p.id === `panel-${targetPanel}`) {
+            setTimeout(() => p.classList.add('active'), 40);
+          }
+        });
+      });
+    });
+
+    // 2. LIQUID RIPPLE EFFECT & OPTION FEEDBACK
+    document.querySelectorAll('.options-group').forEach(group => {
+      const correct = group.dataset.correct;
+      const btns = group.querySelectorAll('.opt-liquid-btn');
+
+      btns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          // Create fluid wave ripple from click origin
+          const circle = document.createElement('span');
+          const diameter = Math.max(btn.clientWidth, btn.clientHeight);
+          const radius = diameter / 2;
+          const rect = btn.getBoundingClientRect();
+          circle.style.width = circle.style.height = `${diameter}px`;
+          circle.style.left = `${e.clientX - rect.left - radius}px`;
+          circle.style.top = `${e.clientY - rect.top - radius}px`;
+          circle.classList.add('liquid-wave');
+
+          const oldWave = btn.querySelector('.liquid-wave');
+          if (oldWave) oldWave.remove();
+          btn.appendChild(circle);
+
+          // State checking
+          btns.forEach(b => b.classList.remove('correct', 'wrong'));
+          const selected = btn.dataset.opt;
+          if (selected === correct) {
+            btn.classList.add('correct');
+          } else {
+            btn.classList.add('wrong');
+            const rightBtn = group.querySelector(`[data-opt="${correct}"]`);
+            if (rightBtn) rightBtn.classList.add('correct');
+          }
+        });
+      });
+    });
+
+    // 3. ZERO-LAG ACCORDION TOGGLE
+    document.querySelectorAll('.accordion-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('open');
+        const body = btn.nextElementSibling;
+        body.classList.toggle('open');
+      });
+    });
+
+    // 4. THEME TOGGLE WITH SMOOTH BLEND
+    const themeToggle = document.getElementById('themeToggle');
+    themeToggle.addEventListener('click', () => {
+      const isDark = document.body.getAttribute('data-theme') === 'dark';
+      document.body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    });
+
+    // 5. FILTER CHAPTER
+    function filterChapter(chapNum) {
+      document.querySelectorAll('.filter-pill').forEach((pill, idx) => {
+        pill.classList.toggle('active', idx + 1 === chapNum);
+      });
+      // Re-trigger cards stagger animation
+      const cards = document.querySelectorAll('#panel-theory .fluid-card');
+      cards.forEach(card => {
+        card.style.animation = 'none';
+        void card.offsetWidth;
+        card.style.animation = 'fluidCardIn 0.45s var(--fluid-ease) both';
+      });
+    }
+  </script>
+</body>
+</html>

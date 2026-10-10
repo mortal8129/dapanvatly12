@@ -36,6 +36,9 @@
       --shadow-lg: 0 10px 25px rgba(2, 132, 199, 0.12);
       --radius: 14px;
       --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --spring-ease: cubic-bezier(0.16, 1, 0.3, 1);
+      --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --liquid-ease: cubic-bezier(0.25, 1, 0.5, 1);
     }
 
     body.dark {
@@ -114,8 +117,11 @@
       background: var(--card-bg); border: 1px solid var(--card-border);
       color: var(--text); display: flex; align-items: center; justify-content: center;
       cursor: pointer; box-shadow: var(--shadow-sm); font-size: 17px;
+      transition: transform 0.22s var(--spring-bounce), background-color 0.2s, box-shadow 0.2s;
+      will-change: transform;
     }
-    .icon-btn:active { transform: scale(0.9); }
+    .icon-btn:hover { transform: scale(1.08); box-shadow: var(--shadow-md); }
+    .icon-btn:active { transform: scale(0.88); }
 
     /* SEARCH HERO */
     .search-hero {
@@ -141,14 +147,14 @@
       border-radius: 12px; background: var(--card-bg);
       border: 1px solid var(--card-border); color: var(--text-muted);
       box-shadow: var(--shadow-sm); margin-bottom: 12px;
-      transition: all 0.2s ease;
-    }
-    .api-status-badge {
+      transition: transform 0.25s var(--spring-bounce), filter 0.2s;
       cursor: pointer; user-select: none;
+      will-change: transform;
     }
     .api-status-badge:hover {
-      filter: brightness(0.95); transform: translateY(-1px);
+      filter: brightness(0.95); transform: translateY(-2px) scale(1.02);
     }
+    .api-status-badge:active { transform: scale(0.94); }
     .api-status-badge.online {
       background: var(--green-bg); border-color: var(--green-border); color: var(--green-text);
     }
@@ -225,7 +231,8 @@
       background: var(--card-bg); border: 2px solid var(--card-border);
       border-radius: 26px; font-size: 16px; font-weight: 600;
       color: var(--text); font-family: inherit; outline: none;
-      box-shadow: var(--shadow-md); transition: all 0.25s ease;
+      box-shadow: var(--shadow-md); transition: transform 0.28s var(--spring-bounce), border-color 0.2s, box-shadow 0.25s;
+      will-change: transform;
     }
     .search-hero.docked .search-input {
       height: 44px; font-size: 14.5px; padding: 0 40px 0 42px;
@@ -233,6 +240,7 @@
     }
     .search-input:focus {
       border-color: var(--accent);
+      transform: scale(1.012);
       box-shadow: 0 0 0 4px var(--accent-glow), var(--shadow-md);
     }
     .clear-btn {
@@ -240,7 +248,9 @@
       border-radius: 50%; background: var(--card-border); border: none;
       color: var(--text-muted); display: none; align-items: center; justify-content: center;
       cursor: pointer; font-size: 13px;
+      transition: transform 0.2s var(--spring-bounce);
     }
+    .clear-btn:active { transform: scale(0.85); }
 
     /* QUICK HINT BELOW HERO (IDLE) */
     .hero-quick-hints {
@@ -255,24 +265,40 @@
     .hint-tag {
       background: var(--card-bg); border: 1px solid var(--card-border);
       padding: 4px 10px; border-radius: 12px; font-weight: 600; cursor: pointer;
+      transition: transform 0.22s var(--spring-bounce), background-color 0.2s;
     }
-    .hint-tag:active { transform: scale(0.95); background: var(--card-hover); }
+    .hint-tag:active { transform: scale(0.92); background: var(--card-hover); }
 
     /* FILTER PILLS */
     .filter-pills {
       display: flex; gap: 6px; overflow-x: auto;
       padding: 10px 2px 4px 2px; width: 100%; max-width: 650px;
       scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
     }
     .pill {
       flex-shrink: 0; font-size: 12px; font-weight: 600;
-      padding: 4px 11px; border-radius: 16px; background: var(--card-bg);
+      padding: 5px 12px; border-radius: 16px; background: var(--card-bg);
       border: 1px solid var(--card-border); color: var(--text-sub);
       cursor: pointer;
+      transition: transform 0.25s var(--spring-bounce), background-color 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
+      will-change: transform;
+    }
+    .pill:hover {
+      transform: translateY(-1px);
+    }
+    .pill:active {
+      transform: scale(0.91);
     }
     .pill.active {
       background: var(--primary); border-color: var(--primary);
-      color: #ffffff; box-shadow: var(--shadow-sm);
+      color: #ffffff; box-shadow: 0 4px 12px var(--accent-glow);
+      animation: pillSpringBounce 0.35s var(--spring-bounce);
+    }
+    @keyframes pillSpringBounce {
+      0% { transform: scale(0.92); }
+      50% { transform: scale(1.08); }
+      100% { transform: scale(1); }
     }
 
     /* MAIN CONTENT */
@@ -282,18 +308,31 @@
       position: relative; z-index: 10;
     }
     .tab-view { display: none; }
-    .tab-view.active { display: block; }
+    .tab-view.active {
+      display: block;
+      animation: tabSpringIn 0.35s var(--spring-ease) both;
+    }
+    @keyframes tabSpringIn {
+      from { opacity: 0; transform: translateY(12px) scale(0.99); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
 
-    /* QUESTION CARD - OPTIMIZED WITH CONTENT-VISIBILITY */
+    /* QUESTION CARD - OPTIMIZED WITH CONTENT-VISIBILITY & SPRING HOVER */
     .question-card {
       background: var(--card-bg); border: 1.5px solid var(--card-border);
       border-radius: var(--radius); padding: 18px; margin-bottom: 16px;
-      box-shadow: var(--shadow-sm); transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.28s var(--spring-bounce), border-color 0.25s ease, box-shadow 0.28s ease;
       content-visibility: auto;
       contain-intrinsic-size: auto 240px;
+      will-change: transform;
     }
     .question-card:hover {
+      transform: translateY(-2px);
       border-color: var(--primary-border); box-shadow: var(--shadow-md);
+    }
+    .question-card:active {
+      transform: scale(0.996);
     }
     .card-header {
       display: flex; align-items: flex-start; justify-content: space-between;
@@ -318,8 +357,10 @@
       color: var(--text-sub); padding: 4px 9px; border-radius: 6px;
       font-size: 11.5px; font-weight: 600; cursor: pointer;
       display: flex; align-items: center; gap: 4px;
+      transition: transform 0.2s var(--spring-bounce), background-color 0.2s;
+      will-change: transform;
     }
-    .btn-copy:active { transform: scale(0.92); background: var(--primary); color: #fff; }
+    .btn-copy:active { transform: scale(0.88); background: var(--primary); color: #fff; }
 
     .question-stem {
       font-size: 15.5px; font-weight: 600; line-height: 1.6;
@@ -330,28 +371,67 @@
       margin: 8px 0 12px 0; border: 1px solid var(--card-border); display: block;
     }
 
-    /* PART 1 OPTIONS */
+    /* PART 1 OPTIONS WITH SPRING BOUNCE & RIPPLE */
     .options-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 12px; }
     .option-item {
       display: flex; align-items: flex-start; gap: 9px;
-      padding: 10px 12px; border-radius: 8px; border: 1px solid var(--card-border);
+      padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--card-border);
       background: var(--card-bg); font-size: 14px; color: var(--text-sub);
-      line-height: 1.45; cursor: pointer; transition: all 0.15s ease;
+      line-height: 1.45; cursor: pointer;
+      position: relative; overflow: hidden;
+      transition: transform 0.24s var(--spring-bounce), border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+      will-change: transform;
+    }
+    .option-item:hover {
+      transform: translateY(-1px);
+      border-color: var(--primary-border);
+    }
+    .option-item:active {
+      transform: scale(0.97);
     }
     .option-item.selected {
       border-color: var(--primary); background: var(--badge-bg);
       color: var(--badge-text); font-weight: 600;
+      animation: optBouncePop 0.35s var(--spring-bounce);
     }
     .option-item.correct {
       background: var(--green-bg); border-color: var(--green-border);
       color: var(--green-text); font-weight: 600;
+      animation: optBouncePop 0.35s var(--spring-bounce);
     }
     .option-item.wrong {
       background: var(--red-bg); border-color: var(--red-border);
       color: var(--red-text); font-weight: 600;
+      animation: optShakeWiggle 0.35s ease;
+    }
+    @keyframes optBouncePop {
+      0% { transform: scale(0.96); }
+      50% { transform: scale(1.025); }
+      100% { transform: scale(1); }
+    }
+    @keyframes optShakeWiggle {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
     }
     .opt-label { font-weight: 700; min-width: 20px; }
     .opt-check { margin-left: auto; font-weight: 700; font-size: 15px; }
+
+    /* FLUID RIPPLE WAVE EFFECT */
+    .fluid-ripple {
+      position: absolute;
+      border-radius: 50%;
+      transform: scale(0);
+      animation: fluidRippleSpread 0.55s var(--spring-ease);
+      background-color: var(--accent-glow);
+      pointer-events: none;
+    }
+    @keyframes fluidRippleSpread {
+      to {
+        transform: scale(3.5);
+        opacity: 0;
+      }
+    }
 
     /* PART 2 TRUE/FALSE */
     .tf-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
@@ -364,11 +444,19 @@
     .tf-btn {
       padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 700;
       border: 1px solid var(--card-border); background: var(--card-hover);
-      color: var(--text-sub); cursor: pointer; transition: all 0.15s ease;
+      color: var(--text-sub); cursor: pointer;
+      transition: transform 0.2s var(--spring-bounce), background-color 0.18s, border-color 0.18s;
+      will-change: transform;
     }
-    .tf-btn:active { transform: scale(0.92); }
-    .tf-btn.selected-true { background: var(--green-bg); border-color: var(--green-border); color: var(--green-text); }
-    .tf-btn.selected-false { background: var(--red-bg); border-color: var(--red-border); color: var(--red-text); }
+    .tf-btn:active { transform: scale(0.88); }
+    .tf-btn.selected-true {
+      background: var(--green-bg); border-color: var(--green-border); color: var(--green-text);
+      animation: optBouncePop 0.3s var(--spring-bounce);
+    }
+    .tf-btn.selected-false {
+      background: var(--red-bg); border-color: var(--red-border); color: var(--red-text);
+      animation: optBouncePop 0.3s var(--spring-bounce);
+    }
 
     /* PART 3 SHORT ANSWER */
     .short-input-wrap {
@@ -378,25 +466,45 @@
       flex: 1; height: 42px; border: 1.5px solid var(--card-border);
       border-radius: 8px; padding: 0 12px; background: var(--card-bg);
       color: var(--text); font-size: 14.5px; font-weight: 600; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .short-input:focus { border-color: var(--primary); }
+    .short-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
 
-    /* EXPLANATION */
+    /* EXPLANATION - ZERO-LAG PERFORMANCE ACCORDION */
     .explain-card {
       margin-top: 10px; background: var(--card-hover);
       border: 1px solid var(--card-border); border-radius: 8px; overflow: hidden;
+      transition: transform 0.22s var(--spring-bounce), border-color 0.2s;
+      will-change: transform;
     }
+    .explain-card:active { transform: scale(0.99); }
     .explain-title {
-      padding: 9px 12px; font-size: 13px; font-weight: 700; color: var(--text-sub);
+      padding: 10px 14px; font-size: 13px; font-weight: 700; color: var(--text-sub);
       display: flex; align-items: center; justify-content: space-between;
       cursor: pointer; user-select: none;
+      transition: color 0.2s;
     }
+    .explain-title:hover { color: var(--primary); }
     .explain-content {
-      padding: 10px 14px 14px 14px; font-size: 13.5px; line-height: 1.6;
-      color: var(--text-sub); border-top: 1px solid var(--card-border);
-      white-space: pre-line; display: none;
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      padding: 0 14px;
+      font-size: 13.5px; line-height: 1.6;
+      color: var(--text-sub);
+      border-top: 1px solid transparent;
+      white-space: pre-line;
+      transition: max-height 0.38s var(--spring-ease), opacity 0.3s var(--spring-ease), padding 0.3s var(--spring-ease), border-color 0.3s;
     }
-    .explain-card.open .explain-content { display: block; }
+    .explain-card.open .explain-content {
+      max-height: 1200px;
+      opacity: 1;
+      padding: 10px 14px 14px 14px;
+      border-top-color: var(--card-border);
+    }
 
     /* VIRTUAL SENTINEL */
     .virtual-sentinel {
@@ -408,12 +516,17 @@
     .exam-card {
       background: var(--card-bg); border: 1.5px solid var(--card-border);
       border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
-      cursor: pointer; box-shadow: var(--shadow-sm); transition: all 0.2s ease;
+      cursor: pointer; box-shadow: var(--shadow-sm);
+      transition: transform 0.28s var(--spring-bounce), border-color 0.2s, box-shadow 0.25s;
       content-visibility: auto;
       contain-intrinsic-size: auto 95px;
+      will-change: transform;
     }
     .exam-card:hover {
-      border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-md);
+      border-color: var(--accent); transform: translateY(-3px) scale(1.008); box-shadow: var(--shadow-md);
+    }
+    .exam-card:active {
+      transform: scale(0.985);
     }
     .exam-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
     .exam-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
@@ -426,9 +539,11 @@
     }
     .btn-back {
       background: var(--card-hover); border: 1px solid var(--card-border);
-      padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
       color: var(--text); cursor: pointer;
+      transition: transform 0.2s var(--spring-bounce), background-color 0.2s;
     }
+    .btn-back:active { transform: scale(0.9); }
 
     /* ONLINE EXAM STICKY HEADER */
     .sticky-exam-bar {
@@ -447,8 +562,11 @@
       background: #10b981; color: #ffffff; border: none;
       padding: 8px 18px; border-radius: 20px; font-size: 13.5px; font-weight: 700;
       cursor: pointer; box-shadow: var(--shadow-sm);
+      transition: transform 0.25s var(--spring-bounce), box-shadow 0.2s;
+      will-change: transform;
     }
-    .btn-submit-exam:active { transform: scale(0.95); }
+    .btn-submit-exam:hover { transform: translateY(-1px) scale(1.02); }
+    .btn-submit-exam:active { transform: scale(0.92); }
 
     /* SCORE BOARD */
     .score-card {
@@ -467,33 +585,46 @@
     .score-stat-box { font-size: 12.5px; color: var(--text-muted); }
     .score-stat-val { font-size: 16px; font-weight: 700; color: var(--text); }
 
-    /* BOTTOM NAV BAR (3 TABS) */
+    /* BOTTOM NAV BAR (3 TABS) WITH SPRING POP */
     .bottom-nav {
-      position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
+      position: fixed; bottom: 0; left: 0; width: 100%; height: 62px;
       background: var(--card-bg); border-top: 1px solid var(--card-border);
       display: flex; align-items: center; justify-content: space-around;
-      z-index: 150; box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+      z-index: 150; box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
     }
     .nav-item {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 3px; color: var(--text-muted); font-size: 12px; font-weight: 700;
       text-decoration: none; cursor: pointer; width: 33.33%; height: 100%;
-      transition: color 0.15s ease;
+      transition: color 0.18s ease, transform 0.25s var(--spring-bounce);
+      position: relative;
     }
-    .nav-item svg { width: 22px; height: 22px; }
+    .nav-item svg { width: 22px; height: 22px; transition: transform 0.25s var(--spring-bounce); }
+    .nav-item:active { transform: scale(0.88); }
     .nav-item.active { color: var(--primary); }
+    .nav-item.active svg {
+      animation: navIconPop 0.35s var(--spring-bounce);
+    }
+    @keyframes navIconPop {
+      0% { transform: scale(0.85); }
+      50% { transform: scale(1.22); }
+      100% { transform: scale(1); }
+    }
 
     /* TOAST */
     .toast {
-      position: fixed; bottom: 74px; left: 50%;
-      transform: translateX(-50%) translateY(30px);
+      position: fixed; bottom: 76px; left: 50%;
+      transform: translateX(-50%) translateY(30px) scale(0.95);
       background: var(--text); color: var(--bg);
-      padding: 8px 16px; border-radius: 20px; font-size: 12.5px;
+      padding: 9px 18px; border-radius: 20px; font-size: 12.5px;
       font-weight: 600; opacity: 0; pointer-events: none;
-      transition: all 0.25s ease; z-index: 200; box-shadow: var(--shadow-md);
+      transition: transform 0.35s var(--spring-bounce), opacity 0.25s var(--spring-ease);
+      z-index: 200; box-shadow: var(--shadow-md);
     }
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    /* MODAL POPUP DATABASE & API CONFIG */
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    /* MODAL POPUP DATABASE & API CONFIG WITH SPRING IN */
     .db-modal-overlay {
       position: fixed; inset: 0; z-index: 1000;
       background: rgba(15, 23, 42, 0.6);
@@ -507,9 +638,12 @@
       border-radius: 18px; max-width: 460px; width: 100%;
       padding: 22px; box-shadow: var(--shadow-lg);
       max-height: 90vh; overflow-y: auto;
-      animation: modalFadeIn 0.2s ease;
+      animation: modalSpringIn 0.35s var(--spring-bounce);
     }
-    @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    @keyframes modalSpringIn {
+      0% { opacity: 0; transform: scale(0.88) translateY(24px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
     .db-modal-header {
       display: flex; justify-content: space-between; align-items: center;
       margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--card-border);
@@ -545,6 +679,7 @@
 
   <!-- TOP ACTIONS -->
   <div class="top-actions">
+    <a href="ui_bento_hub.html" class="icon-btn" title="Bộ sưu tập Giao diện & Hiệu ứng Fluid Motion" style="text-decoration:none;">🎨</a>
     <button class="icon-btn" id="themeBtn" title="Chuyển chế độ Sáng / Tối">🌙</button>
   </div>
 
@@ -1466,7 +1601,7 @@
               const m = opt.match(/^([A-D])\./);
               const optLetter = m ? m[1] : '';
               html += `
-                <div class="option-item" onclick="chooseExamP1('${qid}', '${optLetter}', this)">
+                <div class="option-item" onclick="chooseExamP1('${qid}', '${optLetter}', this, event)">
                   <span class="opt-label">${optLetter ? optLetter + '.' : ''}</span>
                   <span>${optLetter ? optClean.replace(/^[A-D]\.\s*/, '') : optClean}</span>
                 </div>
@@ -1509,11 +1644,25 @@
         updateExamProgress();
       }
 
-      window.chooseExamP1 = function(qid, letter, el) {
+      window.chooseExamP1 = function(qid, letter, el, ev) {
         studentAnswers[qid] = letter;
         const parent = el.closest('.options-grid');
         parent.querySelectorAll('.option-item').forEach(i => i.classList.remove('selected'));
         el.classList.add('selected');
+
+        // Liquid ripple wave
+        if (ev) {
+          const rect = el.getBoundingClientRect();
+          const ripple = document.createElement('span');
+          const size = Math.max(rect.width, rect.height);
+          ripple.className = 'fluid-ripple';
+          ripple.style.width = ripple.style.height = `${size}px`;
+          ripple.style.left = `${ev.clientX - rect.left - size/2}px`;
+          ripple.style.top = `${ev.clientY - rect.top - size/2}px`;
+          el.appendChild(ripple);
+          setTimeout(() => ripple.remove(), 600);
+        }
+
         nativeHaptic(15);
         updateExamProgress();
       };
